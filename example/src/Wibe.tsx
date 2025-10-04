@@ -5,12 +5,14 @@ import { OmniToken, Wibe3Wallet } from "../../wibe3/src";
 const wibe3 = new Wibe3Client();
 
 const wallet = new Wibe3Wallet({
-  privateKey: process.env.PRIVATE_KEY!,
+  privateKey: (import.meta as any).env.VITE_PRIVATE_KEY!,
 });
 
 export const Wibe = () => {
   const { address, tradingAddress, withdraw, connect, auth, disconnect, refresh } = useWibe3(wibe3);
   const [jwt, setJwt] = useState<string | null>(null);
+  const [isClaiming, setIsClaiming] = useState(false);
+  const [isWithdrawing, setIsWithdrawing] = useState(false);
 
   const authWallet = async () => {
     const signed = await auth();
@@ -21,49 +23,72 @@ export const Wibe = () => {
 
   const claim = async () => {
     try {
+      setIsClaiming(true);
       if (!tradingAddress) throw new Error("Trading address not found");
-      await wallet.transfer({ token: OmniToken.USDT, amount: 0.01, to: tradingAddress, paymentId: "claim" });
+      await wallet.transfer({ token: OmniToken.USDT, amount: 0.01, to: tradingAddress, paymentId: "claim3" });
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+      await refresh().catch(() => {});
+      alert("Claim successful");
     } catch (e) {
       alert(e);
+    } finally {
+      setIsClaiming(false);
     }
   };
 
   const withdrawToken = async () => {
     try {
+      setIsWithdrawing(true);
       await withdraw(OmniToken.USDT, 0.01);
       await refresh().catch(() => {});
       alert("Withdraw successful");
     } catch (e) {
       alert(e);
+    } finally {
+      setIsWithdrawing(false);
     }
   };
 
   if (!address) {
     return (
-      <div>
-        <button onClick={() => connect()}>Connect</button>
+      <div className="view">
+        <button className="input-button" onClick={() => connect()}>
+          Connect
+        </button>
       </div>
     );
   }
 
   if (!jwt) {
     return (
-      <div>
+      <div className="view">
         <Balances />
 
-        <button onClick={() => authWallet()}>Auth</button>
-        <button onClick={() => disconnect()}>Disconnect</button>
+        <button className="input-button" onClick={() => authWallet()}>
+          Auth
+        </button>
+        <button className="input-button" onClick={() => disconnect()}>
+          Disconnect
+        </button>
       </div>
     );
   }
 
   return (
-    <div>
+    <div className="view">
       <Balances />
 
-      <button onClick={() => claim()}>Claim 0.01$</button>
-      <button onClick={() => withdraw(OmniToken.USDT, 0.01)}>Withdraw USDT</button>
-      <button onClick={() => disconnect()}>Disconnect</button>
+      <button className="input-button" disabled={isClaiming} onClick={() => claim()}>
+        {isClaiming ? "Claiming..." : "Claim 0.01 USDT"}
+      </button>
+
+      <button className="input-button" disabled={isWithdrawing} onClick={() => withdrawToken()}>
+        {isWithdrawing ? "Withdrawing..." : "Withdraw 0.01 USDT"}
+      </button>
+
+      <button className="input-button" onClick={() => disconnect()}>
+        Disconnect
+      </button>
     </div>
   );
 };
@@ -74,35 +99,22 @@ const Balances = () => {
   if (!address) return null;
 
   return (
-    <div>
+    <div style={{ textAlign: "left", marginBottom: 16 }}>
       <p style={{ margin: 0 }}>Address: {address}</p>
-      <p style={{ margin: 0 }}>Balances:</p>
 
+      <p style={{ margin: 0, marginTop: 8 }}>Balances:</p>
       {balances.map((balance) => (
-        <div key={balance.symbol} style={styles.balance}>
+        <div key={balance.symbol} className="input-button" style={{ marginTop: 8 }}>
           <img
             style={{ width: 24, height: 24, borderRadius: "50%", objectFit: "cover" }}
             src={balance.icon}
             alt={balance.symbol}
           />
-          <p style={{ margin: 0 }}>
+          <p style={{ margin: 0, marginLeft: 8 }}>
             {balance.float} {balance.symbol}
           </p>
         </div>
       ))}
     </div>
   );
-};
-
-const styles = {
-  balance: {
-    display: "flex",
-    alignItems: "center",
-    gap: 8,
-    border: "1px solid #bebebe",
-    padding: 8,
-    borderRadius: 16,
-    width: "fit-content",
-    marginBottom: 8,
-  },
 };

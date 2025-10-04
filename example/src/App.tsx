@@ -6,7 +6,6 @@ import { Account } from "../../src/types/wallet.ts";
 import { WalletActions } from "./WalletActions.tsx";
 import { NetworkSelector } from "./form-component/NetworkSelector.tsx";
 import { nearConnector, stellarKit, tonConnectUI, appKitModal } from "./selectors.ts";
-import "./index.css";
 
 export const ExampleNEAR: FC = () => {
   const [network, setNetwork] = useState<"testnet" | "mainnet">("mainnet");
@@ -108,9 +107,8 @@ export const MultichainExample = () => {
                 className={"input-button"}
                 onClick={async () => {
                   try {
-                    const { signed } = await connector.auth(+type, "auth", []);
-                    console.log({ signed });
-                    const result = await connector.simulateIntents([signed]);
+                    const { signed } = await connector.auth(+type, "auth", [], async (t) => t);
+                    const result = await connector.intents.simulateIntents([signed]);
                     console.log(result);
                     alert("Verified!");
                   } catch (e) {
