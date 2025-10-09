@@ -1,33 +1,43 @@
 import { useState } from "react";
-import { useWibe3, Wibe3Client } from "../../wibe3/src/client";
-import { OmniToken, Wibe3Wallet } from "../../wibe3/src";
+import { useWibe3, HotConnector, Intents, LocalWallet, OmniToken } from "../../wibe3/src";
 
-const wibe3 = new Wibe3Client();
-
-const wallet = new Wibe3Wallet({
-  privateKey: (import.meta as any).env.VITE_PRIVATE_KEY!,
-});
+const wibe3 = new HotConnector();
 
 export const Wibe = () => {
-  const { address, tradingAddress, withdraw, connect, auth, disconnect, refresh } = useWibe3(wibe3);
+  const { wallet, address, tradingAddress, connect } = useWibe3(wibe3);
   const [jwt, setJwt] = useState<string | null>(null);
   const [isClaiming, setIsClaiming] = useState(false);
   const [isWithdrawing, setIsWithdrawing] = useState(false);
 
   const authWallet = async () => {
-    const signed = await auth();
-    const isValid = await wallet.validateAuth(signed);
-    if (!isValid) throw new Error("Invalid auth");
-    setJwt("jwt");
+    try {
+      if (!wallet) throw new Error("Wallet not found");
+      const signed = await wallet.auth("wibe3_auth");
+      await Intents.simulateIntents([signed!.signed]);
+      // const isValid = await wallet.validateAuth(signed!);
+      // if (!isValid) throw new Error("Invalid auth");
+      setJwt("jwt");
+    } catch (e) {
+      alert(e);
+    }
   };
 
   const claim = async () => {
     try {
       setIsClaiming(true);
+      if (!wallet) throw new Error("Wallet not found");
       if (!tradingAddress) throw new Error("Trading address not found");
-      await wallet.transfer({ token: OmniToken.USDT, amount: 0.01, to: tradingAddress, paymentId: "claim3" });
+
+      const localWallet = new LocalWallet({ privateKey: (import.meta as any).env.VITE_PRIVATE_KEY! });
+      await localWallet.transfer({
+        paymentId: `${tradingAddress}-claim1`,
+        token: OmniToken.USDT,
+        to: tradingAddress,
+        amount: 0.01,
+      });
+
       await new Promise((resolve) => setTimeout(resolve, 2000));
-      await refresh().catch(() => {});
+      await wallet.getTokenBalances([OmniToken.USDT, OmniToken.USDC]).catch(() => {});
       alert("Claim successful");
     } catch (e) {
       alert(e);
@@ -39,8 +49,9 @@ export const Wibe = () => {
   const withdrawToken = async () => {
     try {
       setIsWithdrawing(true);
-      await withdraw(OmniToken.USDT, 0.01);
-      await refresh().catch(() => {});
+      if (!wallet) throw new Error("Wallet not found");
+      await wallet.withdraw({ token: OmniToken.USDT, amount: 0.01 });
+      await wallet.getTokenBalances([OmniToken.USDT, OmniToken.USDC]).catch(() => {});
       alert("Withdraw successful");
     } catch (e) {
       alert(e);
@@ -67,7 +78,7 @@ export const Wibe = () => {
         <button className="input-button" onClick={() => authWallet()}>
           Auth
         </button>
-        <button className="input-button" onClick={() => disconnect()}>
+        <button className="input-button" onClick={() => wallet?.disconnect()}>
           Disconnect
         </button>
       </div>
@@ -86,7 +97,7 @@ export const Wibe = () => {
         {isWithdrawing ? "Withdrawing..." : "Withdraw 0.01 USDT"}
       </button>
 
-      <button className="input-button" onClick={() => disconnect()}>
+      <button className="input-button" onClick={() => wallet?.disconnect()}>
         Disconnect
       </button>
     </div>

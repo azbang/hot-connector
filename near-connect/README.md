@@ -89,7 +89,7 @@ The developer writes a self-hosted script that implements the integration of the
 }
 ```
 
-The `executor` endpoint called in a standalone iframe if the user decides to use this wallet on the site. The script implements the [NearWallet](./near-connect/src/types/wallet.ts) wallet class and registers it in a special object
+The `executor` endpoint called in a standalone iframe if the user decides to use this wallet on the site. The script implements the [NearWallet](./src/types/wallet.ts) wallet class and registers it in a special object
 `window.selector.ready(yourNearWallet)`
 
 After that, the library delegates user requests directly to `yourNearWallet` via `iframe.postMessage` communication.

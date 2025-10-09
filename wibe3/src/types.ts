@@ -1,4 +1,4 @@
-import { WalletType } from "@hot-labs/near-connect";
+import { OmniWallet, WalletType } from "./OmniWallet";
 
 export enum OmniToken {
   USDT = "nep141:usdt.tether-token.near",
@@ -23,10 +23,20 @@ export interface AuthCommitment {
   seed: string;
 }
 
-export interface TrasferIntent {
+export interface TransferIntent {
   intent: "transfer";
   tokens: Record<string, string>;
   receiver_id: string;
+}
+
+export interface TokenDiffIntent {
+  type: "token_diff";
+  token_diff: Record<string, string>;
+}
+
+export interface AuthCallIntent {
+  type: "auth_call";
+  msg: string;
 }
 
 export interface TokenBalance {

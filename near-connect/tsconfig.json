@@ -17,5 +17,8 @@
     "jsxImportSource": "preact",
     "resolveJsonModule": true
   },
-  "include": ["./src", "../near-connect"]
+  "paths": {
+    "@common/*": ["../common/*"]
+  },
+  "include": ["../common/**/*", "./src/**/*"]
 }

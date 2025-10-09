@@ -20,15 +20,22 @@
     "@hot-labs/omni-sdk": "^2.20.14",
     "@near-js/crypto": "^2.3.3",
     "@near-js/utils": "^2.2.4",
+    "@noble/hashes": "^2.0.1",
+    "@peculiar/asn1-ecc": "^2.5.0",
+    "@peculiar/asn1-schema": "^2.5.0",
     "@reown/appkit": "^1.8.8",
     "@reown/appkit-adapter-ethers": "^1.7.17",
     "@reown/appkit-adapter-solana": "^1.7.17",
+    "@scure/base": "^2.0.0",
     "@tonconnect/ui": "^2.2.0",
     "ethers": "^6.15.0",
-    "react": "^19.2.0"
+    "react": "^19.2.0",
+    "tweetnacl": "^1.0.3",
+    "vite": "^7.1.9",
+    "vite-plugin-node-polyfills": "^0.24.0"
   },
   "scripts": {
-    "build": "rm -rf build && yarn tsc"
+    "build": "rm -rf build && tsc"
   },
   "devDependencies": {
     "@types/react": "^19.2.0",

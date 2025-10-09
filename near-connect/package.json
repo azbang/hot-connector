@@ -1,0 +1,29 @@
+{
+  "name": "@hot-labs/near-connect",
+  "version": "0.6.5",
+  "type": "commonjs",
+  "main": "./build/index.js",
+  "types": "./build/index.d.ts",
+  "license": "MIT",
+  "author": "HOT Labs",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/hot-dao/near-selector"
+  },
+  "homepage": "https://github.com/hot-dao/near-selector",
+  "directories": {
+    "build": "build"
+  },
+  "files": [
+    "build/*"
+  ],
+  "scripts": {
+    "build": "rm -rf build && yarn tsc"
+  },
+  "peerDependencies": {
+    "@walletconnect/sign-client": "^2.21.8"
+  },
+  "devDependencies": {
+    "typescript": "^5.2.2"
+  }
+}

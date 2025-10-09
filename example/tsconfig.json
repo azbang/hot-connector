@@ -26,7 +26,7 @@
 
   "include": [
     "src",
-    "../src",
+    "../near-connect",
     "../wibe3/src",
     "vite-env.d.ts",
     "vite.config.ts",

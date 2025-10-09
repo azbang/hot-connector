@@ -1,45 +1,47 @@
-import { FC, useEffect, useState } from "react";
+import { FC, useState } from "react";
 
-import { HotConnector, WalletType, NearWallet } from "../../src";
-import { Account } from "../../src/types/wallet.ts";
+import { HotConnector, Intents, WalletType } from "../../wibe3/src";
+import { NearConnector, NearWalletBase } from "../../near-connect/src";
 
 import { WalletActions } from "./WalletActions.tsx";
 import { NetworkSelector } from "./form-component/NetworkSelector.tsx";
-import { nearConnector, stellarKit, tonConnectUI, appKitModal } from "./selectors.ts";
 
 export const ExampleNEAR: FC = () => {
   const [network, setNetwork] = useState<"testnet" | "mainnet">("mainnet");
   const [account, _setAccount] = useState<{ id: string; network: "testnet" | "mainnet" }>();
-  const [wallet, setWallet] = useState<NearWallet | undefined>();
+  const [wallet, setWallet] = useState<NearWalletBase | undefined>();
 
-  function setAccount(account: Account | undefined) {
+  function setAccount(account: { accountId: string } | undefined) {
     if (account == null) return _setAccount(undefined);
     _setAccount({ id: account.accountId, network: account.accountId.endsWith("testnet") ? "testnet" : "mainnet" });
   }
 
-  useEffect(() => {
-    nearConnector.on("wallet:signIn", async (t) => {
-      setWallet(await nearConnector.wallet());
+  const [connector] = useState<NearConnector>(() => {
+    const connector = new NearConnector({ network });
+    connector.on("wallet:signIn", async (t) => {
+      setWallet(await connector.wallet());
       setAccount(t.accounts[0]);
     });
 
-    nearConnector.on("wallet:signOut", async () => {
+    connector.on("wallet:signOut", async () => {
       setWallet(undefined);
       setAccount(undefined);
     });
 
-    nearConnector.wallet().then(async (wallet) => {
+    connector.wallet().then(async (wallet) => {
       wallet.getAccounts().then((t) => {
         setAccount(t[0]);
         setWallet(wallet);
       });
     });
-  }, [network, nearConnector]);
+
+    return connector;
+  });
 
   const networkAccount = account != null && account.network === network ? account : undefined;
   const connect = async () => {
-    if (networkAccount != null) return nearConnector.disconnect();
-    await nearConnector.connect();
+    if (networkAccount != null) return connector.disconnect();
+    await connector.connect();
   };
 
   return (
@@ -49,7 +51,7 @@ export const ExampleNEAR: FC = () => {
         network={network}
         onSelectNetwork={(network) => {
           setNetwork(network);
-          nearConnector.switchNetwork(network);
+          connector.switchNetwork(network);
         }}
       />
       <button className={"input-button"} onClick={() => connect()}>
@@ -68,26 +70,22 @@ export const MultichainExample = () => {
     [WalletType.SOLANA]: null,
     [WalletType.TON]: null,
     [WalletType.STELLAR]: null,
+    [WalletType.PASSKEY]: null,
   });
 
   const [connector] = useState<HotConnector>(() => {
-    return new HotConnector({
-      onConnect: async (wallet) => {
-        if (!wallet) return;
-        const address = await wallet.getAddress();
-        setWallets((t) => ({ ...t, [wallet.type]: address }));
-      },
-
-      onDisconnect: (type) => {
-        setWallets((t) => ({ ...t, [type]: null }));
-      },
-
-      chains: [WalletType.NEAR, WalletType.EVM, WalletType.SOLANA, WalletType.TON, WalletType.STELLAR],
-      stellarKit: stellarKit,
-      nearConnector: nearConnector,
-      tonConnect: tonConnectUI,
-      appKit: appKitModal,
+    const connector = new HotConnector();
+    connector.onConnect(async ({ wallet }) => {
+      if (!wallet) return;
+      const address = await wallet.getAddress();
+      setWallets((t) => ({ ...t, [wallet.type]: address }));
     });
+
+    connector.onDisconnect(({ wallet }) => {
+      setWallets((t) => ({ ...t, [wallet.type]: null }));
+    });
+
+    return connector;
   });
 
   return (
@@ -107,8 +105,10 @@ export const MultichainExample = () => {
                 className={"input-button"}
                 onClick={async () => {
                   try {
-                    const { signed } = await connector.auth(+type, "auth", [], async (t) => t);
-                    const result = await connector.intents.simulateIntents([signed]);
+                    const wallet = connector.wallets.find((t) => t.type === +type);
+                    if (!wallet) return;
+                    const { signed } = await wallet.auth("auth", [], async (t) => t);
+                    const result = await Intents.simulateIntents([signed]);
                     console.log(result);
                     alert("Verified!");
                   } catch (e) {
