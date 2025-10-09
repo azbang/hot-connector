@@ -7,13 +7,12 @@ import { getOrCreateAppKit } from "./reown";
 
 class EvmConnector extends OmniConnector<EvmAccount> {
   appKit: AppKit;
-  type = WalletType.EVM;
-  isSupported = true;
-  chainId = 1;
-  id = "eip155";
 
   name = "EVM Wallet";
   icon = "https://storage.herewallet.app/ft/1:native.png";
+  type = WalletType.EVM;
+  isSupported = true;
+  id = "evm-reown";
 
   constructor(appKit?: AppKit) {
     super();

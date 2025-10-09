@@ -83,105 +83,6 @@ function getCurveType(formattedPublicKey: string): string {
 }
 
 /**
- * Confirms that the assertion was signed by the authenticator with specified public key
- */
-export async function verifyAuthenticatorAssertion(
-  assertation: AuthenticatorAssertionResponse,
-  { curveType, publicKey }: CredentialKey,
-  challenge: Uint8Array
-): Promise<boolean> {
-  if (extractSignedChallenge(assertation) !== base64urlnopad.encode(challenge)) {
-    return false;
-  }
-
-  return verifyWebAuthnSignature({
-    clientDataJSON: assertation.clientDataJSON,
-    authenticatorData: assertation.authenticatorData,
-    signature: extractRawSignature(assertation.signature, curveType),
-    curveType,
-    publicKey,
-  });
-}
-
-export async function verifyWebAuthnSignature({
-  clientDataJSON,
-  authenticatorData,
-  signature,
-  curveType,
-  publicKey,
-}: {
-  clientDataJSON: Uint8Array | ArrayBuffer;
-  authenticatorData: Uint8Array | ArrayBuffer;
-  signature: Uint8Array;
-  curveType: CurveType;
-  publicKey: Uint8Array;
-}) {
-  // @ts-ignore
-  const clientDataHash = await crypto.subtle.digest("SHA-256", clientDataJSON);
-  const signedBytes = concatUint8Arrays([new Uint8Array(authenticatorData), new Uint8Array(clientDataHash)]);
-  const publicKeyWebCryptoAPI = reconstructWebCryptoAPIPublicKey(publicKey, curveType);
-
-  switch (curveType) {
-    case "p256": {
-      const key = await crypto.subtle.importKey(
-        "raw", // @ts-ignore
-        publicKeyWebCryptoAPI,
-        { name: "ECDSA", namedCurve: "P-256" },
-        true,
-        ["verify"]
-      );
-
-      // @ts-ignore
-      return crypto.subtle.verify({ name: "ECDSA", hash: { name: "SHA-256" } }, key, signature, signedBytes);
-    }
-
-    case "ed25519": {
-      return sign.detached.verify(signedBytes, signature, publicKeyWebCryptoAPI);
-    }
-
-    default:
-      curveType satisfies never;
-      throw new Error(`Unsupported curve type ${curveType}`);
-  }
-}
-
-/**
- * Makes a public key that can be used with WebCryptoAPI from the raw public key bytes
- */
-function reconstructWebCryptoAPIPublicKey(publicKey: Uint8Array, curveType: CurveType): Uint8Array {
-  switch (curveType) {
-    case "p256": {
-      const x = publicKey.slice(0, 32);
-      const y = publicKey.slice(32, 64);
-      return concatUint8Arrays([new Uint8Array([0x04]), x, y]);
-    }
-
-    case "ed25519":
-      return publicKey;
-
-    default:
-      curveType satisfies never;
-      throw new Error(`Unsupported curve type ${curveType}`);
-  }
-}
-
-/**
- * Tries to determine the challenge that was signed by the authenticator
- */
-function extractSignedChallenge(assertation: AuthenticatorAssertionResponse): string | null {
-  const clientDataJSON = new TextDecoder().decode(assertation.clientDataJSON);
-
-  try {
-    const clientData = JSON.parse(clientDataJSON);
-    if (typeof clientData.challenge === "string") return clientData.challenge;
-  } catch {
-    console.error("Failed to parse clientDataJSON");
-  }
-
-  return null;
-}
-
-/**
  * Gets the actual signature from AuthenticatorAssertionResponse#signature bytes
  */
 export function extractRawSignature(attestationSignature_: ArrayBuffer | Uint8Array, curveType: CurveType): Uint8Array {
@@ -203,12 +104,12 @@ export function extractRawSignature(attestationSignature_: ArrayBuffer | Uint8Ar
       if (shouldRemoveLeadingZero(rBytes)) {
         rBytes = rBytes.slice(1);
       }
+
       if (shouldRemoveLeadingZero(sBytes)) {
         sBytes = sBytes.slice(1);
       }
 
       sBytes = normalizeSignatureS(sBytes);
-
       return concatUint8Arrays([rBytes, sBytes]);
     }
 

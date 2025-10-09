@@ -8,10 +8,9 @@ class TonConnector extends OmniConnector<TonWallet> {
 
   type = WalletType.TON;
   isSupported = true;
-  chainId = 1;
-  id = "ton";
   name = "TON Wallet";
   icon = "https://storage.herewallet.app/ft/1111:native.png";
+  id = "ton-connect";
 
   constructor(tonConnect?: TonConnectUI) {
     super();

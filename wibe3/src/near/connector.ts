@@ -11,7 +11,6 @@ class Connector extends OmniConnector<NearWallet> {
   name = "NEAR Wallet";
   icon = "https://storage.herewallet.app/ft/1010:native.png";
   isSupported = true;
-  chainId = 1;
   id = "near";
 
   constructor(connector?: NearConnector) {

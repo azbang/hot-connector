@@ -7,12 +7,12 @@ import { getOrCreateAppKit } from "../evm/reown";
 
 class SolanaConnector extends OmniConnector<SolanaAccount> {
   appKit: AppKit;
+
   type = WalletType.SOLANA;
-  isSupported = true;
-  chainId = 1;
-  id = "solana";
   name = "Solana Wallet";
   icon = "https://storage.herewallet.app/ft/1001:native.png";
+  id = "solana-reown";
+  isSupported = true;
 
   constructor(appKit?: AppKit) {
     super();

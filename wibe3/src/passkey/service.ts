@@ -25,8 +25,8 @@ export async function signIn(): Promise<string> {
   if (assertion == null || assertion.type !== "public-key") {
     throw new Error("Invalid attestation type");
   }
-  const credential = assertion as PublicKeyCredential;
 
+  const credential = assertion as PublicKeyCredential;
   return base58.encode(new Uint8Array(credential.rawId));
 }
 
@@ -40,7 +40,6 @@ export async function createNew(passkeyName?: string): Promise<WebauthnCredentia
   });
 
   const finalPasskeyName = passkeyName == null || passkeyName === "" ? `User ${formattedDate}` : passkeyName;
-
   const registrationOptions: CredentialCreationOptions = {
     publicKey: {
       challenge: crypto.getRandomValues(new Uint8Array(32)),
@@ -79,8 +78,8 @@ export async function createNew(passkeyName?: string): Promise<WebauthnCredentia
   if (registration == null || registration.type !== "public-key") {
     throw new Error("Invalid attestation type");
   }
-  const credential = registration as PublicKeyCredential;
 
+  const credential = registration as PublicKeyCredential;
   const { publicKey, algorithm } = await extractCredentialPublicKey(credential);
 
   return {
@@ -108,14 +107,14 @@ function getRootDomain(hostname: string): string {
 }
 
 export async function signMessage(
-  challenge: Uint8Array,
-  credential_: WebauthnCredential
+  challenge: Uint8Array | ArrayBuffer,
+  { rawId }: WebauthnCredential
 ): Promise<AuthenticatorAssertionResponse> {
   // @ts-ignore
   const assertion = await navigator.credentials.get({
     publicKey: {
       rpId: getRelayingPartyId(),
-      allowCredentials: [{ id: base58.decode(credential_.rawId), type: "public-key" }],
+      allowCredentials: [{ id: base58.decode(rawId), type: "public-key" }],
       timeout: 60000,
       challenge,
     },
@@ -131,8 +130,8 @@ export async function signMessage(
   if (assertion == null || assertion.type !== "public-key") {
     throw new Error("Invalid assertion");
   }
-  const credential = assertion as PublicKeyCredential;
 
+  const credential = assertion as PublicKeyCredential;
   return credential.response as AuthenticatorAssertionResponse;
 }
 

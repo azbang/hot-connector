@@ -1,37 +1,22 @@
 import { keccak_256 } from "@noble/hashes/sha3.js";
-import { base64, hex } from "@scure/base";
+import { base58, base64, base64url, hex } from "@scure/base";
 
-import { DataStorage, LocalStorage } from "../../../near-connect/src/helpers/storage";
 import { OmniWallet, WalletType } from "../OmniWallet";
-import { parsePublicKey } from "./utils";
-
-type StoredPasskey = {
-  credentialId: string; // base64url (older versions stored hex; we support both when reading)
-  publicKeyJwk: JsonWebKey; // ES256 (P-256)
-};
+import { extractRawSignature, parsePublicKey } from "./utils";
+import { signMessage, WebauthnCredential } from "./service";
+import PasskeyConnector from "./connector";
 
 class PasskeyWallet extends OmniWallet {
-  private storage: DataStorage;
-  private rpId: string;
-
-  constructor({ storage, rpId }: { storage?: DataStorage; rpId?: string } = {}) {
-    super();
-
-    this.storage = storage || new LocalStorage();
-    this.rpId = rpId || (typeof location !== "undefined" ? location.hostname : "localhost");
+  constructor(readonly connector: PasskeyConnector, readonly credential: WebauthnCredential) {
+    super(connector);
   }
 
   get type() {
     return WalletType.PASSKEY;
   }
 
-  async onDisconnect() {
-    this.storage.remove("passkey");
-  }
-
   getAddress = async (): Promise<string> => {
-    // @ts-ignore
-    const { curveType, publicKey } = parsePublicKey(this.credential);
+    const { curveType, publicKey } = parsePublicKey(this.credential.publicKey);
 
     switch (curveType) {
       case "p256": {
@@ -51,7 +36,7 @@ class PasskeyWallet extends OmniWallet {
   };
 
   getPublicKey = async (): Promise<string> => {
-    return "";
+    return this.credential.publicKey;
   };
 
   getIntentsAddress = async (): Promise<string> => {
@@ -92,16 +77,15 @@ class PasskeyWallet extends OmniWallet {
     });
 
     const challenge = await crypto.subtle.digest("SHA-256", new Uint8Array(new TextEncoder().encode(message)));
-
-    // @ts-ignore
-    const signed = await this.webauthnSign(challenge);
+    const signed = await signMessage(challenge, this.credential);
+    const { curveType } = parsePublicKey(this.credential.publicKey);
 
     return {
       standard: "webauthn",
       payload: message,
-      public_key: `p256:${publicKey}`,
-      signature: `p256:${signed.signature}`,
-      authenticator_data: signed.authenticatorData,
+      public_key: publicKey,
+      signature: `p256:${base58.encode(extractRawSignature(signed.signature, curveType))}`,
+      authenticator_data: base64url.encode(new Uint8Array(signed.authenticatorData)),
       client_data_json: new TextDecoder().decode(signed.clientDataJSON),
     };
   }

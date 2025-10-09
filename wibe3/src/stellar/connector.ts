@@ -13,8 +13,7 @@ class StellarConnector extends OmniConnector<StellarWallet> {
   name = "Stellar Wallet";
   icon = "https://storage.herewallet.app/ft/1100:native.png";
   isSupported = true;
-  chainId = 1;
-  id = "stellar";
+  id = "stellarkit";
 
   constructor(stellarKit?: StellarWalletsKit) {
     super();

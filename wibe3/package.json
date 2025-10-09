@@ -30,12 +30,10 @@
     "@tonconnect/ui": "^2.2.0",
     "ethers": "^6.15.0",
     "react": "^19.2.0",
-    "tweetnacl": "^1.0.3",
-    "vite": "^7.1.9",
-    "vite-plugin-node-polyfills": "^0.24.0"
+    "tweetnacl": "^1.0.3"
   },
   "scripts": {
-    "build": "rm -rf build && tsc"
+    "build": "rm -rf build && vite"
   },
   "devDependencies": {
     "@types/react": "^19.2.0",

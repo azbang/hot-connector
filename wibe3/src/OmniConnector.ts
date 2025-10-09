@@ -1,6 +1,5 @@
 import { LogoutPopup } from "../../near-connect/src/popups/LogoutPopup";
-import { OmniWallet, SignedAuth } from "./OmniWallet";
-import { AuthPopup } from "../../near-connect/src/popups/AuthIntentPopup";
+import { OmniWallet, WalletType } from "./OmniWallet";
 import { EventEmitter } from "../../near-connect/src/helpers/events";
 
 export abstract class OmniConnector<T extends OmniWallet = OmniWallet> {
@@ -14,7 +13,7 @@ export abstract class OmniConnector<T extends OmniWallet = OmniWallet> {
   abstract silentDisconnect(): Promise<void>;
 
   abstract isSupported: boolean;
-  abstract chainId: number;
+  abstract type: WalletType;
   abstract name: string;
   abstract icon: string;
   abstract id: string;

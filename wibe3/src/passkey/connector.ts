@@ -1,24 +1,36 @@
 import { OmniConnector } from "../OmniConnector";
 import { WalletType } from "../OmniWallet";
 import PasskeyWallet from "./wallet";
+import { LocalStorage } from "../../../near-connect/src/helpers/storage";
+import { createNew } from "./service";
 
 class PasskeyConnector extends OmniConnector<PasskeyWallet> {
   type = WalletType.PASSKEY;
-  chainId = 1;
+  storage = new LocalStorage();
+  icon = "https://near-intents.org/static/icons/wallets/webauthn.svg";
   name = "Passkey";
-  icon = "https://storage.herewallet.app/ft/-10:native.png";
   id = "passkey";
+
+  constructor() {
+    super();
+
+    this.storage.get("passkey-wallet").then((data) => {
+      if (data) this.setWallet(new PasskeyWallet(this, JSON.parse(data)));
+    });
+  }
 
   get isSupported() {
     return typeof window !== "undefined" && typeof window.PublicKeyCredential === "function";
   }
 
   async connect() {
-    throw new Error("Method not implemented.");
+    const credential = await createNew();
+    this.storage.set("passkey-wallet", JSON.stringify(credential));
+    this.setWallet(new PasskeyWallet(this, credential));
   }
 
   async silentDisconnect() {
-    throw new Error("Method not implemented.");
+    this.storage.remove("passkey-wallet");
   }
 }
 
