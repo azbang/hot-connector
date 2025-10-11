@@ -1,5 +1,5 @@
-import { MultichainPopup } from "../../near-connect/src/popups/MultichainPopup";
-import { EventEmitter } from "../../near-connect/src/helpers/events";
+import { MultichainPopup } from "./popups/MultichainPopup";
+import { EventEmitter } from "./events";
 
 import { OmniWallet } from "./OmniWallet";
 import { OmniConnector } from "./OmniConnector";
@@ -20,12 +20,12 @@ export class HotConnector {
 
   constructor(options?: { connectors?: OmniConnector[] }) {
     this.connectors = options?.connectors || [
-      new PasskeyConnector(),
       new NearConnector(),
       new EvmConnector(),
       new SolanaConnector(),
       new StellarConnector(),
       new TonConnector(),
+      new PasskeyConnector(),
     ];
 
     this.connectors.forEach((t) => {

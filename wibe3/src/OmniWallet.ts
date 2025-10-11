@@ -1,7 +1,7 @@
 import { sha256 } from "@noble/hashes/sha2.js";
 
-import { AuthPopup } from "../../near-connect/src/popups/AuthIntentPopup";
-import { OmniToken, OmniTokenMetadata, TokenBalance, TransferIntent } from "./types";
+import { AuthPopup } from "./popups/AuthIntentPopup";
+import { AuthCommitment, OmniToken, OmniTokenMetadata, TokenBalance, TransferIntent } from "./types";
 import { OmniConnector } from "./OmniConnector";
 import Intents from "./Intents";
 
@@ -25,9 +25,9 @@ export interface SignedAuth {
 export abstract class OmniWallet {
   constructor(readonly connector?: OmniConnector) {}
 
-  async disconnect() {
+  async disconnect({ silent = false }: { silent?: boolean } = {}) {
     if (!this.connector) throw new Error("Connector not implemented");
-    await this.connector.disconnect();
+    await this.connector.disconnect({ silent });
   }
 
   abstract get type(): WalletType;
@@ -36,14 +36,15 @@ export abstract class OmniWallet {
   abstract getIntentsAddress(): Promise<string>;
 
   abstract signIntentsWithAuth(domain: string, intents?: Record<string, any>[]): Promise<SignedAuth>;
-  abstract signIntents(
-    intents: Record<string, any>[],
-    options?: { nonce?: Uint8Array; deadline?: number }
-  ): Promise<Record<string, any>>;
+  abstract signIntents(intents: Record<string, any>[], options?: { nonce?: Uint8Array; deadline?: number }): Promise<Record<string, any>>;
 
   async executeIntents(intents: Record<string, any>[], hashes: string[] = []) {
     const signed = await this.signIntents(intents);
     return await Intents.publishSignedIntents([signed], hashes);
+  }
+
+  async validateAuth(auth: AuthCommitment) {
+    return true;
   }
 
   async transfer(args: { token: OmniToken; amount: number; to: string; paymentId: string }) {
@@ -60,11 +61,7 @@ export abstract class OmniWallet {
     await Intents.publishSignedIntents([signed]);
   }
 
-  async auth<T = SignedAuth>(
-    domain: string,
-    intents?: Record<string, any>[],
-    then?: (signed: SignedAuth) => Promise<T>
-  ): Promise<T> {
+  async auth<T = SignedAuth>(domain: string, intents?: Record<string, any>[], then?: (signed: SignedAuth) => Promise<T>): Promise<T> {
     return new Promise<T>((resolve, reject) => {
       const popup = new AuthPopup({
         onApprove: async () => {

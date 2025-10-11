@@ -58,10 +58,7 @@ class SolanaWallet extends OmniWallet {
     return await this.wallet.signMessage(new TextEncoder().encode(message));
   }
 
-  async signIntents(
-    intents: Record<string, any>[],
-    options?: { deadline?: number; nonce?: Uint8Array }
-  ): Promise<Record<string, any>> {
+  async signIntents(intents: Record<string, any>[], options?: { deadline?: number; nonce?: Uint8Array }): Promise<Record<string, any>> {
     const nonce = new Uint8Array(options?.nonce || window.crypto.getRandomValues(new Uint8Array(32)));
     const signerId = await this.getIntentsAddress();
     const publicKey = await this.getPublicKey();

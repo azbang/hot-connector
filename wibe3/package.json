@@ -1,6 +1,6 @@
 {
   "name": "@hot-labs/wibe3",
-  "version": "0.2.3",
+  "version": "0.3.2",
   "description": "Wibe3 is web3 sdk for vibe coders",
   "license": "ISC",
   "author": "",
@@ -33,7 +33,7 @@
     "tweetnacl": "^1.0.3"
   },
   "scripts": {
-    "build": "rm -rf build && vite"
+    "build": "rm -rf build && yarn tsc"
   },
   "devDependencies": {
     "@types/react": "^19.2.0",

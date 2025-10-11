@@ -1,8 +1,6 @@
 import { ECDSASigValue } from "@peculiar/asn1-ecc";
 import { AsnParser } from "@peculiar/asn1-schema";
 import { base58, hex } from "@scure/base";
-import { base64urlnopad } from "@scure/base";
-import { sign } from "tweetnacl";
 
 // Supported curves
 export type CurveType = "p256" | "ed25519";

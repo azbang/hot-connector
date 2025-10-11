@@ -36,9 +36,9 @@ class EvmWallet extends OmniWallet {
 
     return {
       signed: await this.signIntents(intents || [], { nonce: new Uint8Array(nonce) }),
-      address: address,
-      publicKey: address,
       chainId: WalletType.EVM,
+      publicKey: address,
+      address: address,
       seed,
     };
   };
@@ -56,10 +56,7 @@ class EvmWallet extends OmniWallet {
     return await this.wallet.request({ method: "eth_sendTransaction", params: [tx] });
   }
 
-  async signIntents(
-    intents: Record<string, any>[],
-    options?: { deadline?: number; nonce?: Uint8Array }
-  ): Promise<Record<string, any>> {
+  async signIntents(intents: Record<string, any>[], options?: { deadline?: number; nonce?: Uint8Array }): Promise<Record<string, any>> {
     const address = await this.getAddress();
     const nonce = new Uint8Array(options?.nonce || window.crypto.getRandomValues(new Uint8Array(32)));
 

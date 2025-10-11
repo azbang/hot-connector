@@ -96,10 +96,7 @@ export default class NearWallet extends OmniWallet {
     };
   }
 
-  async signIntents(
-    intents: Record<string, any>[],
-    options?: { nonce?: Uint8Array; deadline?: number }
-  ): Promise<Record<string, any>> {
+  async signIntents(intents: Record<string, any>[], options?: { nonce?: Uint8Array; deadline?: number }): Promise<Record<string, any>> {
     const nonce = new Uint8Array(options?.nonce || window.crypto.getRandomValues(new Uint8Array(32)));
     const signerId = await this.getIntentsAddress();
 

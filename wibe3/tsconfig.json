@@ -5,6 +5,7 @@
     "alwaysStrict": true,
     "allowJs": true,
     "strict": true,
+    "rootDir": "./src",
     "outDir": "./build",
     "declaration": true,
     "sourceMap": true,
@@ -17,5 +18,5 @@
     "jsxImportSource": "preact",
     "resolveJsonModule": true
   },
-  "include": ["./src", "../near-connect"]
+  "include": ["./src"]
 }

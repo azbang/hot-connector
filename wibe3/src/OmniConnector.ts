@@ -1,6 +1,6 @@
-import { LogoutPopup } from "../../near-connect/src/popups/LogoutPopup";
+import { LogoutPopup } from "./popups/LogoutPopup";
 import { OmniWallet, WalletType } from "./OmniWallet";
-import { EventEmitter } from "../../near-connect/src/helpers/events";
+import { EventEmitter } from "./events";
 
 export abstract class OmniConnector<T extends OmniWallet = OmniWallet> {
   wallet: T | null = null;

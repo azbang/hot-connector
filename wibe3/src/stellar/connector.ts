@@ -1,5 +1,5 @@
 import { allowAllModules, ISupportedWallet, StellarWalletsKit, WalletNetwork } from "@creit.tech/stellar-wallets-kit";
-import { LocalStorage } from "../../../near-connect/src/helpers/storage";
+import { LocalStorage } from "../storage";
 
 import { WalletType } from "../OmniWallet";
 import { OmniConnector } from "../OmniConnector";
@@ -18,8 +18,7 @@ class StellarConnector extends OmniConnector<StellarWallet> {
   constructor(stellarKit?: StellarWalletsKit) {
     super();
 
-    this.stellarKit =
-      stellarKit || new StellarWalletsKit({ network: WalletNetwork.PUBLIC, modules: allowAllModules() });
+    this.stellarKit = stellarKit || new StellarWalletsKit({ network: WalletNetwork.PUBLIC, modules: allowAllModules() });
 
     this.storage.get("hot-connector:stellar").then((data) => {
       try {
