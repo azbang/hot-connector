@@ -1,7 +1,9 @@
+const font = `-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol"`;
+
 export const css = (id: string) => /*css*/ `
 ${id} * {
   box-sizing: border-box;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+  font-family: ${font};
   color: #fff;
 }
 
@@ -125,6 +127,23 @@ ${id} .modal-body textarea {
   transition: background 0.2s ease-in-out;
   font-family: monospace;
   font-size: 12px;
+}
+
+${id} .modal-body input {
+  width: 100%;
+  padding: 12px;
+  border-radius: 12px;
+  background:rgb(61, 61, 61);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  outline: none;
+  font-size: 16px;
+  transition: background 0.2s ease-in-out, border 0.2s ease-in-out;
+  font-family: ${font};
+}
+
+${id} .modal-body input:focus {
+  border: 1px solid rgba(255, 255, 255, 0.5);
 }
 
 ${id} .modal-body button {

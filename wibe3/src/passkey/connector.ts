@@ -1,6 +1,8 @@
 import { base58 } from "@scure/base";
+
 import { LocalStorage } from "../storage";
 import { OmniConnector } from "../OmniConnector";
+import { PasskeyPopup } from "../popups/PasskeyPopup";
 import { WalletType } from "../OmniWallet";
 
 import { createNew, getRelayingPartyId } from "./service";
@@ -26,8 +28,8 @@ class PasskeyConnector extends OmniConnector<PasskeyWallet> {
     return typeof window !== "undefined" && typeof window.PublicKeyCredential === "function";
   }
 
-  async connectNew() {
-    const credential = await createNew();
+  async connectNew(nickname?: string) {
+    const credential = await createNew(nickname);
     await this.retryOperation(async () => {
       const response = await fetch(`https://dev.herewallet.app/api/v1/hot/passkey_public_key`, {
         body: JSON.stringify({ public_key: credential.publicKey, raw_id: credential.rawId, hostname: getRelayingPartyId() }),
@@ -38,27 +40,42 @@ class PasskeyConnector extends OmniConnector<PasskeyWallet> {
     });
 
     this.storage.set("passkey-wallet", JSON.stringify(credential));
-    this.setWallet(new PasskeyWallet(this, credential));
+    const wallet = new PasskeyWallet(this, credential);
+    this.setWallet(wallet);
+    return wallet;
+  }
+
+  async connectExisting() {
+    const rawId = await this.signIn();
+    if (!rawId) throw new Error("Failed to get passkey raw id");
+
+    return await this.retryOperation(async () => {
+      const response = await fetch(`https://dev.herewallet.app/api/v1/hot/passkey_public_key?raw_id=${rawId}`, { method: "GET" });
+      if (!response.ok) throw new Error("Failed to get passkey public key");
+
+      const { public_key } = await response.json();
+      this.storage.set("passkey-wallet", JSON.stringify({ public_key: public_key, raw_id: rawId }));
+      const wallet = new PasskeyWallet(this, { publicKey: public_key, rawId });
+      this.setWallet(wallet);
+      return wallet;
+    });
   }
 
   async connect() {
     if (!this.isSupported) throw new Error("Passkey is not supported");
 
-    const rawId = await this.signIn();
-    if (!rawId) return this.connectNew();
+    let popup!: PasskeyPopup;
+    await new Promise<PasskeyWallet>((resolve, reject) => {
+      popup = new PasskeyPopup({
+        onLogin: () => this.connectExisting().then(resolve).catch(reject),
+        onCreate: (nickname?: string) => this.connectNew(nickname).then(resolve).catch(reject),
+        onReject: () => reject(new Error("Passkey connection rejected")),
+      });
 
-    const result = await this.retryOperation(async () => {
-      const response = await fetch(`https://dev.herewallet.app/api/v1/hot/passkey_public_key?raw_id=${rawId}`, { method: "GET" });
-      if (response.status === 404) return null;
-      if (!response.ok) throw new Error("Failed to get passkey public key");
-
-      const { public_key } = await response.json();
-      this.storage.set("passkey-wallet", JSON.stringify({ public_key: public_key, raw_id: rawId }));
-      return new PasskeyWallet(this, { publicKey: public_key, rawId });
+      popup.create();
     });
 
-    if (result) this.setWallet(result);
-    else await this.connectNew();
+    popup?.destroy();
   }
 
   async signIn(): Promise<string | null> {

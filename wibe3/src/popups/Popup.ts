@@ -20,10 +20,15 @@ export class Popup<T extends Record<string, any>> {
     return html``;
   }
 
+  get(querySelector: string | Element) {
+    return typeof querySelector === "string" ? this.root.querySelector(querySelector)! : querySelector;
+  }
+
   disposables: (() => void)[] = [];
   addListener(querySelector: string | Element, event: string, callback: (e: Event) => void) {
-    const element = typeof querySelector === "string" ? this.root.querySelector(querySelector)! : querySelector;
+    const element = this.get(querySelector);
     if (!element) return;
+
     element.addEventListener(event, callback);
     this.disposables.push(() => element.removeEventListener(event, callback));
   }
