@@ -2,6 +2,7 @@ import SandboxExecutor from "./executor";
 
 async function getIframeCode(args: { id: string; executor: SandboxExecutor; code: string }) {
   const storage = await args.executor.getAllStorage();
+  const providers = args.executor.connector.providers;
   const manifest = args.executor.manifest;
   const uuid = args.id;
 
@@ -183,6 +184,11 @@ async function getIframeCode(args: { id: string; executor: SandboxExecutor; code
         screenY: ${window.screenY},
         outerWidth: ${window.outerWidth},
         screenX: ${window.screenX},
+
+        providers: {
+          mainnet: ${JSON.stringify(providers.mainnet)},
+          testnet: ${JSON.stringify(providers.testnet)},
+        },
 
         uuid() {
           return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (c) {

@@ -41,7 +41,6 @@ const Nightly = async () => {
   const getAccounts = async (): Promise<Array<Account>> => {
     const { accountId, publicKey } = await window.selector.external("nightly.near", "account");
     if (!accountId) return [];
-
     return [{ accountId, publicKey: `ed25519:${base_encode(publicKey.data)}` }];
   };
 
@@ -104,15 +103,7 @@ const Nightly = async () => {
       });
     },
 
-    async signAndSendTransaction({
-      receiverId,
-      actions,
-      network,
-    }: {
-      receiverId: string;
-      actions: any;
-      network: string;
-    }) {
+    async signAndSendTransaction({ receiverId, actions, network }: { receiverId: string; actions: any; network: string }) {
       await checkExist();
       const accounts = await getAccounts();
       if (!accounts.length) throw new Error("Wallet not signed in");
@@ -141,15 +132,7 @@ const Nightly = async () => {
       return results;
     },
 
-    async createSignedTransaction({
-      receiverId,
-      actions,
-      network,
-    }: {
-      receiverId: string;
-      actions: any;
-      network: string;
-    }) {
+    async createSignedTransaction({ receiverId, actions, network }: { receiverId: string; actions: any; network: string }) {
       await checkExist();
       const accounts = await getAccounts();
       if (!accounts.length) throw new Error("Wallet not signed in");
@@ -160,12 +143,7 @@ const Nightly = async () => {
 
     async signTransaction({ transaction, network }: any) {
       await checkExist();
-      return await nearAPI.transactions.signTransaction(
-        transaction,
-        signer,
-        transaction.signerId,
-        networks[network].networkId
-      );
+      return await nearAPI.transactions.signTransaction(transaction, signer, transaction.signerId, networks[network].networkId);
     },
 
     async getPublicKey() {

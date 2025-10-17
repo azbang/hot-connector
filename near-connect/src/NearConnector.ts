@@ -3,14 +3,7 @@ import { NearWalletsPopup } from "./popups/NearWalletsPopup";
 import { LocalStorage, DataStorage } from "./helpers/storage";
 import IndexedDB from "./helpers/indexdb";
 
-import {
-  EventNearWalletInjected,
-  WalletManifest,
-  Network,
-  WalletFeatures,
-  Logger,
-  NearWalletBase,
-} from "./types/wallet";
+import { EventNearWalletInjected, WalletManifest, Network, WalletFeatures, Logger, NearWalletBase } from "./types/wallet";
 import { ParentFrameWallet } from "./ParentFrameWallet";
 import { InjectedWallet } from "./InjectedWallet";
 import { SandboxWallet } from "./SandboxedWallet";
@@ -22,6 +15,7 @@ interface NearConnectorOptions {
   walletConnect?: { projectId: string; metadata: any };
   events?: EventEmitter<EventMap>;
   manifest?: string | { wallets: WalletManifest[]; version: string };
+  providers?: Record<"mainnet" | "testnet", string[]>;
   network?: Network;
   features?: Partial<WalletFeatures>;
   autoConnect?: boolean;
@@ -43,6 +37,7 @@ export class NearConnector {
   logger?: Logger;
 
   network: Network = "mainnet";
+  providers: Record<"mainnet" | "testnet", string[]> = { mainnet: [], testnet: [] };
   connectWithKey?: { contractId: string; methodNames?: string[]; allowance?: string };
   walletConnect?: { projectId: string; metadata: any };
   autoConnect?: boolean;
@@ -60,6 +55,7 @@ export class NearConnector {
     this.features = options?.features ?? {};
     this.walletConnect = options?.walletConnect;
     this.autoConnect = options?.autoConnect ?? true;
+    this.providers = options?.providers ?? { mainnet: [], testnet: [] };
 
     this.whenManifestLoaded = new Promise(async (resolve) => {
       if (options?.manifest == null || typeof options.manifest === "string") {
@@ -134,10 +130,7 @@ export class NearConnector {
   };
 
   private async _loadManifest(manifestUrl?: string) {
-    let manifestEndpoint = manifestUrl
-      ? manifestUrl
-      : "https://raw.githubusercontent.com/hot-dao/near-selector/refs/heads/main/repository/manifest.json";
-
+    let manifestEndpoint = manifestUrl ? manifestUrl : "https://raw.githubusercontent.com/hot-dao/near-selector/refs/heads/main/repository/manifest.json";
     const manifest = (await (await fetch(manifestEndpoint)).json()) as { wallets: WalletManifest[]; version: string };
     return manifest;
   }

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useWibe3, HotConnector, Intents, LocalWallet, OmniToken } from "../../wibe3/src";
+import { useWibe3, HotConnector, Intents, LocalWallet, OmniToken } from "@hot-labs/wibe3";
 
 const wibe3 = new HotConnector();
 
@@ -116,11 +116,7 @@ const Balances = () => {
       <p style={{ margin: 0, marginTop: 8 }}>Balances:</p>
       {balances.map((balance) => (
         <div key={balance.symbol} className="input-button" style={{ marginTop: 8 }}>
-          <img
-            style={{ width: 24, height: 24, borderRadius: "50%", objectFit: "cover" }}
-            src={balance.icon}
-            alt={balance.symbol}
-          />
+          <img style={{ width: 24, height: 24, borderRadius: "50%", objectFit: "cover" }} src={balance.icon} alt={balance.symbol} />
           <p style={{ margin: 0, marginLeft: 8 }}>
             {balance.float} {balance.symbol}
           </p>

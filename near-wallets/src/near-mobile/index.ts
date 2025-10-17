@@ -202,9 +202,7 @@ export const initNearMobileWallet = async () => {
     },
 
     async verifyOwner() {
-      throw Error(
-        "[NearMobileWallet]: verifyOwner is deprecated, use signMessage method with implementation NEP0413 Standard"
-      );
+      throw Error("[NearMobileWallet]: verifyOwner is deprecated, use signMessage method with implementation NEP0413 Standard");
     },
 
     async signMessage(data: { network: Network; recipient: string; message: string; nonce: number[] }) {

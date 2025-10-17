@@ -2,16 +2,17 @@ import { defineConfig } from "vite";
 import { nodePolyfills } from "vite-plugin-node-polyfills";
 
 const pkg = process.env.PACKAGE!;
+const EXAMPLE = process.env.EXAMPLE!;
 
 export default defineConfig({
   plugins: [nodePolyfills()],
   root: "./",
   build: {
     emptyOutDir: false,
-    outDir: "./repository",
+    outDir: EXAMPLE ? "../example/public/repository" : "../repository",
     rollupOptions: {
       input: {
-        main: `./wallets/${pkg}`,
+        main: `./src/${pkg}`,
       },
       output: {
         entryFileNames: `${pkg}.js`,

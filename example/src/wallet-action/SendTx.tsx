@@ -7,17 +7,14 @@ import { parseNearAmount } from "@near-js/utils";
 export const SendTx = ({ wallet, network }: IPropsWalletAction) => {
   const [amount, setAmount] = useLocalStorage(`send-tx-${network}-amount`, "0.01");
   const [receiverId, setReceiverId] = useLocalStorage(`send-tx-${network}-receiver-id`, `demo.${network}`);
-  const [lastResult, setLastResult] = useLocalStorage<FinalExecutionOutcome | undefined>(
-    `send-tx-${network}-last-result`,
-    undefined
-  );
+  const [lastResult, setLastResult] = useLocalStorage<FinalExecutionOutcome | undefined>(`send-tx-${network}-last-result`, undefined);
 
   const sendTx = async () => {
     setLastResult(undefined);
 
     const result = await wallet.signAndSendTransaction({
       receiverId,
-      actions: [{ type: "Transfer", params: { deposit: parseNearAmount(amount) ?? "0" } }],
+      actions: [{ type: "FunctionCall", params: { methodName: "transfer", args: { deposit: parseNearAmount(amount) ?? "0" } } }],
     });
 
     setLastResult(result);

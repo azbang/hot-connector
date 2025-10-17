@@ -1,10 +1,10 @@
 import { FC, useState } from "react";
 
-import { HotConnector, Intents, WalletType } from "../../wibe3/src";
+import { HotConnector, Intents, WalletType } from "@hot-labs/wibe3";
 import { NearConnector, NearWalletBase } from "../../near-connect/src";
 
-import { WalletActions } from "./WalletActions.tsx";
 import { NetworkSelector } from "./form-component/NetworkSelector.tsx";
+import { WalletActions } from "./WalletActions.tsx";
 
 export const ExampleNEAR: FC = () => {
   const [network, setNetwork] = useState<"testnet" | "mainnet">("mainnet");
@@ -17,7 +17,7 @@ export const ExampleNEAR: FC = () => {
   }
 
   const [connector] = useState<NearConnector>(() => {
-    const connector = new NearConnector({ network });
+    const connector = new NearConnector({ network, manifest: "/manifest.json" });
     connector.on("wallet:signIn", async (t) => {
       setWallet(await connector.wallet());
       setAccount(t.accounts[0]);
@@ -82,6 +82,7 @@ export const MultichainExample = () => {
     });
 
     connector.onDisconnect(({ wallet }) => {
+      if (!wallet) return;
       setWallets((t) => ({ ...t, [wallet.type]: null }));
     });
 

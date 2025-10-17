@@ -1,7 +1,7 @@
 import { WalletManifest, WalletPermissions } from "../types/wallet";
+import { NearConnector } from "../NearConnector";
 import { parseUrl } from "../helpers/url";
 import { uuid4 } from "../helpers/uuid";
-import { NearConnector } from "../NearConnector";
 
 import IframeExecutor from "./iframe";
 
@@ -53,57 +53,65 @@ class SandboxExecutor {
   }
 
   _onMessage = async (iframe: IframeExecutor, event: MessageEvent) => {
+    const success = (result: any) => {
+      iframe.postMessage({ ...event.data, status: "success", result: result });
+    };
+
+    const failed = (error: any) => {
+      iframe.postMessage({ ...event.data, status: "failed", result: error });
+    };
+
     if (event.data.method === "ui.showIframe") {
       iframe.show();
-      iframe.postMessage({ ...event.data, status: "success", result: null });
+      success(null);
       return;
     }
 
     if (event.data.method === "ui.hideIframe") {
       iframe.hide();
-      iframe.postMessage({ ...event.data, status: "success", result: null });
+      success(null);
       return;
     }
 
     if (event.data.method === "storage.set") {
       this.assertPermissions(iframe, "storage", event);
       localStorage.setItem(`${this.storageSpace}:${event.data.params.key}`, event.data.params.value);
-      iframe.postMessage({ ...event.data, status: "success", result: null });
+      success(null);
       return;
     }
 
     if (event.data.method === "storage.get") {
       this.assertPermissions(iframe, "storage", event);
       const value = localStorage.getItem(`${this.storageSpace}:${event.data.params.key}`);
-      iframe.postMessage({ ...event.data, status: "success", result: value });
+      success(value);
       return;
     }
 
     if (event.data.method === "storage.keys") {
       this.assertPermissions(iframe, "storage", event);
       const keys = Object.keys(localStorage).filter((key) => key.startsWith(`${this.storageSpace}:`));
-      iframe.postMessage({ ...event.data, status: "success", result: keys });
+      success(keys);
       return;
     }
 
     if (event.data.method === "storage.remove") {
       this.assertPermissions(iframe, "storage", event);
       localStorage.removeItem(`${this.storageSpace}:${event.data.params.key}`);
-      iframe.postMessage({ ...event.data, status: "success", result: null });
+      success(null);
       return;
     }
 
     if (event.data.method === "panel.focus") {
       const panel = this.activePanels[event.data.params.windowId];
       if (panel) panel.focus();
-      iframe.postMessage({ ...event.data, status: "success", result: null });
+      success(null);
       return;
     }
 
     if (event.data.method === "panel.postMessage") {
       const panel = this.activePanels[event.data.params.windowId];
       if (panel) panel.postMessage(event.data.params.data, "*");
-      iframe.postMessage({ ...event.data, status: "success", result: null });
+      success(null);
       return;
     }
 
@@ -112,7 +120,7 @@ class SandboxExecutor {
       if (panel) panel.close();
 
       delete this.activePanels[event.data.params.windowId];
-      iframe.postMessage({ ...event.data, status: "success", result: null });
+      success(null);
       return;
     }
 
@@ -122,15 +130,17 @@ class SandboxExecutor {
         const client = await this.connector.getWalletConnect();
         const result = await client.connect(event.data.params);
         result.approval();
-        iframe.postMessage({ ...event.data, status: "success", result: { uri: result.uri } });
+        success({ uri: result.uri });
       } catch (e) {
-        iframe.postMessage({ ...event.data, status: "failed", result: e });
+        failed(e);
       }
+      return;
     }
 
     if (event.data.method === "walletConnect.getProjectId") {
       this.assertPermissions(iframe, "walletConnect", event);
-      iframe.postMessage({ ...event.data, status: "success", result: this.connector.walletConnect?.projectId });
+      success(this.connector.walletConnect?.projectId);
+      return;
     }
 
     if (event.data.method === "walletConnect.disconnect") {
@@ -138,10 +148,11 @@ class SandboxExecutor {
       try {
         const client = await this.connector.getWalletConnect();
         const result = await client.disconnect(event.data.params);
-        iframe.postMessage({ ...event.data, status: "success", result: result });
+        success(result);
       } catch (e) {
-        iframe.postMessage({ ...event.data, status: "failed", result: e });
+        failed(e);
       }
+      return;
     }
 
     if (event.data.method === "walletConnect.getSession") {
@@ -150,14 +161,11 @@ class SandboxExecutor {
         const client = await this.connector.getWalletConnect();
         const key = client.session.keys[client.session.keys.length - 1];
         const session = key ? client.session.get(key) : null;
-        iframe.postMessage({
-          ...event.data,
-          status: "success",
-          result: session ? { topic: session.topic, namespaces: session.namespaces } : null,
-        });
+        success(session ? { topic: session.topic, namespaces: session.namespaces } : null);
       } catch (e) {
-        iframe.postMessage({ ...event.data, status: "failed", result: e });
+        failed(e);
       }
+      return;
     }
 
     if (event.data.method === "walletConnect.request") {
@@ -165,10 +173,11 @@ class SandboxExecutor {
       try {
         const client = await this.connector.getWalletConnect();
         const result = await client.request(event.data.params);
-        iframe.postMessage({ ...event.data, status: "success", result: result });
+        success(result);
       } catch (e) {
-        iframe.postMessage({ ...event.data, status: "failed", result: e });
+        failed(e);
       }
+      return;
     }
 
     if (event.data.method === "external") {
@@ -185,11 +194,10 @@ class SandboxExecutor {
         }
 
         const result = typeof obj[key] === "function" ? await obj[key](...(args || [])) : obj[key];
-        iframe.postMessage({ ...event.data, status: "success", result: result });
+        success(result);
       } catch (e) {
-        iframe.postMessage({ ...event.data, status: "failed", result: e });
+        failed(e);
       }
-
       return;
     }
 
@@ -213,7 +221,7 @@ class SandboxExecutor {
         }
       };
 
-      iframe.postMessage({ ...event.data, status: "success", result: panelId });
+      success(panelId);
       window.addEventListener("message", handler);
 
       if (panel && panelId) {
@@ -241,7 +249,7 @@ class SandboxExecutor {
       const url = parseUrl(event.data.params.url);
       const invalid = ["https", "http", "javascript:", "file:", "data:", "blob:", "about:"];
       if (!url || invalid.includes(url.protocol)) {
-        iframe.postMessage({ ...event.data, status: "failed", result: "Invalid URL" });
+        failed("Invalid URL");
         throw new Error("[open.nativeApp] Invalid URL");
       }
 
@@ -250,6 +258,7 @@ class SandboxExecutor {
       linkIframe.style.display = "none";
       document.body.appendChild(linkIframe);
       iframe.postMessage({ ...event.data, status: "success", result: null });
+      return;
     }
   };
 
@@ -260,7 +269,11 @@ class SandboxExecutor {
       return this.actualCode;
     }
 
-    const newVersion = await fetch(executor.manifest.executor).then((res) => res.text());
+    const url = parseUrl(executor.manifest.executor);
+    if (!url) throw new Error("Invalid executor URL");
+
+    url.searchParams.set("nonce", uuid4());
+    const newVersion = await fetch(url.toString()).then((res) => res.text());
     this.connector.logger?.log(`New version of code fetched`);
     this.actualCode = newVersion;
 
@@ -275,9 +288,7 @@ class SandboxExecutor {
   }
 
   async loadCode(): Promise<string> {
-    const cachedCode = await this.connector.db
-      .getItem<string>(`${this.manifest.id}:${this.manifest.version}`)
-      .catch(() => null);
+    const cachedCode = await this.connector.db.getItem<string>(`${this.manifest.id}:${this.manifest.version}`).catch(() => null);
     this.connector.logger?.log(`Code loaded from cache`, cachedCode !== null);
 
     const task = this.checkNewVersion(this, cachedCode as string | null);

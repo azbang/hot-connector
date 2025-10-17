@@ -29,7 +29,7 @@ jobs:
         id: pkg
         shell: bash
         run: |
-          VERSION=$(node -p "require('./package.json').version")
+          VERSION=$(node -p "require('./near-connect/package.json').version")
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Prepare release notes from CHANGELOG.md
@@ -37,26 +37,28 @@ jobs:
         shell: bash
         run: |
           VERSION="${{ steps.pkg.outputs.version }}"
+          CHANGELOG="near-connect/CHANGELOG.md"
+          OUT="RELEASE_CHANGELOG.md"
           awk -v ver="$VERSION" '
             $0 ~ "^# " ver "$" {print; flag=1; next}
             flag && $0 ~ "^# " && $0 !~ "^# " ver "$" {flag=0}
             flag {print}
-          ' CHANGELOG.md > RELEASE_CHANGELOG.md
-          if [ ! -s RELEASE_CHANGELOG.md ]; then
-            echo "# $VERSION" > RELEASE_CHANGELOG.md
-            echo "" >> RELEASE_CHANGELOG.md
-            cat CHANGELOG.md >> RELEASE_CHANGELOG.md
+          ' "$CHANGELOG" > "$OUT"
+          if [ ! -s "$OUT" ]; then
+            echo "# $VERSION" > "$OUT"
+            echo "" >> "$OUT"
+            cat "$CHANGELOG" >> "$OUT"
           fi
           echo "notes<<EOF" >> $GITHUB_OUTPUT
-          cat RELEASE_CHANGELOG.md >> $GITHUB_OUTPUT
+          cat "$OUT" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
 
       - name: Create source ZIP archive
         id: zip
         shell: bash
         run: |
-          ZIP_NAME="near-selector-${{ steps.pkg.outputs.version }}.zip"
-          git archive -o "$ZIP_NAME" HEAD
+          ZIP_NAME="near-connect-${{ steps.pkg.outputs.version }}.zip"
+          git archive -o "$ZIP_NAME" HEAD near-connect
           echo "zip=$ZIP_NAME" >> $GITHUB_OUTPUT
 
       - name: Create GitHub Release
@@ -67,6 +69,6 @@ jobs:
           body: ${{ steps.changelog.outputs.notes }}
           files: |
             ${{ steps.zip.outputs.zip }}
-            CHANGELOG.md
+            near-connect/CHANGELOG.md
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

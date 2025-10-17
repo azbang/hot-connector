@@ -1,18 +1,13 @@
-import type {
-  Action,
-  FinalExecutionOutcome,
-  Network,
-  SignedMessage,
-  SignMessageParams,
-  Transaction,
-} from "@near-wallet-selector/core";
-import { createAction } from "@near-wallet-selector/wallet-utils";
-import { Account, Connection, InMemorySigner, providers, transactions } from "near-api-js";
-import type { PublicKey } from "near-api-js/lib/utils/index.js";
-import { KeyPair, serialize } from "near-api-js/lib/utils/index.js";
-import * as borsh from "borsh";
-import { SCHEMA } from "near-api-js/lib/transaction.js";
+import type { InternalAction, FinalExecutionOutcome, Network, SignedMessage, SignMessageParams } from "@near-wallet-selector/core";
 import type { JsonRpcProvider } from "near-api-js/lib/providers/index.js";
+import type { PublicKey } from "near-api-js/lib/utils/index.js";
+
+import { Account, Connection, InMemorySigner, transactions } from "near-api-js";
+import { KeyPair, serialize } from "near-api-js/lib/utils/index.js";
+import { createAction } from "@near-wallet-selector/wallet-utils";
+import { SCHEMA } from "near-api-js/lib/transaction.js";
+import * as borsh from "borsh";
+import { NearRpc } from "./rpc";
 
 const DEFAULT_POPUP_WIDTH = 480;
 const DEFAULT_POPUP_HEIGHT = 640;
@@ -21,11 +16,11 @@ const POLL_INTERVAL = 300;
 interface WalletMessage {
   status: "success" | "failure" | "pending";
   transactionHashes?: string;
-  error?: string;
-  [key: string]: unknown;
   signedRequest?: SignedMessage;
   errorMessage?: string;
   errorCode?: string;
+  error?: string;
+  [key: string]: unknown;
 }
 
 interface FunctionCallKey {
@@ -60,9 +55,7 @@ export class MyNearWalletConnector {
       const privateKey = window.localStorage.getItem(`near-api-js:keystore:${accountId}:${network.networkId}`);
 
       if (privateKey) {
-        const { contractId, methodNames } = JSON.parse(
-          window.localStorage.getItem("near-wallet-selector:contract") || "{}"
-        );
+        const { contractId, methodNames } = JSON.parse(window.localStorage.getItem("near-wallet-selector:contract") || "{}");
 
         this.functionCallKey = { privateKey: privateKey, contractId, methods: methodNames || [] };
         window.localStorage.setItem("functionCallKey", JSON.stringify(this.functionCallKey));
@@ -71,7 +64,7 @@ export class MyNearWalletConnector {
     }
 
     this.walletUrl = walletUrl;
-    this.provider = new providers.JsonRpcProvider({ url: network.nodeUrl });
+    this.provider = new NearRpc(window.selector?.providers?.[network.networkId as "mainnet" | "testnet"] || [network.nodeUrl]);
     this.signedAccountId = window.localStorage.getItem("signedAccountId") || "";
 
     const functionCallKey = window.localStorage.getItem("functionCallKey");
@@ -122,13 +115,7 @@ export class MyNearWalletConnector {
     });
   }
 
-  async requestSignInUrl({
-    contractId,
-    methodNames,
-  }: {
-    contractId?: string;
-    methodNames?: Array<string>;
-  }): Promise<string> {
+  async requestSignInUrl({ contractId, methodNames }: { contractId?: string; methodNames?: Array<string> }): Promise<string> {
     const currentUrl = new URL(window.selector.location);
 
     const newUrl = new URL(`${this.walletUrl}/login/`);
@@ -173,18 +160,14 @@ export class MyNearWalletConnector {
     });
   }
 
-  async signAndSendTransactions(transactionsWS: Array<Transaction>): Promise<Array<FinalExecutionOutcome>> {
-    const txs = await Promise.all(transactionsWS.map((t) => this.completeTransaction(t)));
+  async signAndSendTransactions(
+    transactionsWS: Array<{ actions: Array<InternalAction>; receiverId: string; signerId: string }>
+  ): Promise<Array<FinalExecutionOutcome>> {
+    const txs = await Promise.all(transactionsWS.map((t) => this.completeTransaction({ receiverId: t.receiverId, actions: t.actions })));
     return this.signAndSendTransactionsMNW(txs);
   }
 
-  async signAndSendTransaction({
-    receiverId,
-    actions,
-  }: {
-    receiverId: string;
-    actions: Array<Action>;
-  }): Promise<FinalExecutionOutcome> {
+  async signAndSendTransaction({ receiverId, actions }: { receiverId: string; actions: Array<InternalAction> }): Promise<FinalExecutionOutcome> {
     if (actions.length === 1 && this.storedKeyCanSign(receiverId, actions)) {
       try {
         return this.signUsingKeyPair({ receiverId, actions });
@@ -199,13 +182,7 @@ export class MyNearWalletConnector {
     return results[0];
   }
 
-  async completeTransaction({
-    receiverId,
-    actions,
-  }: {
-    receiverId: string;
-    actions: Array<Action>;
-  }): Promise<transactions.Transaction> {
+  async completeTransaction({ receiverId, actions }: { receiverId: string; actions: Array<InternalAction> }): Promise<transactions.Transaction> {
     // To create a transaction we need a recent block
     const block = await this.provider.block({ finality: "final" });
     const blockHash = serialize.base_decode(block.header.hash);
@@ -228,26 +205,19 @@ export class MyNearWalletConnector {
     return Promise.all(txsHashes.map((hash) => this.provider.txStatus(hash, "unused", "NONE")));
   }
 
-  storedKeyCanSign(receiverId: string, actions: Array<Action>) {
+  storedKeyCanSign(receiverId: string, actions: Array<InternalAction>) {
     if (this.functionCallKey && this.functionCallKey.contractId === receiverId) {
       return (
         actions[0].type === "FunctionCall" &&
         actions[0].params.deposit === "0" &&
-        (this.functionCallKey.methods.length === 0 ||
-          this.functionCallKey.methods.includes(actions[0].params.methodName))
+        (this.functionCallKey.methods.length === 0 || this.functionCallKey.methods.includes(actions[0].params.methodName))
       );
     } else {
       return false;
     }
   }
 
-  async signUsingKeyPair({
-    receiverId,
-    actions,
-  }: {
-    receiverId: string;
-    actions: Array<Action>;
-  }): Promise<FinalExecutionOutcome> {
+  async signUsingKeyPair({ receiverId, actions }: { receiverId: string; actions: Array<InternalAction> }): Promise<FinalExecutionOutcome> {
     // instantiate an account (NEAR API is a nightmare)
     const keyPair = KeyPair.fromString(this.functionCallKey!.privateKey);
     const signer = await InMemorySigner.fromKeyPair(this.network.networkId, this.signedAccountId, keyPair);
@@ -276,11 +246,7 @@ export class MyNearWalletConnector {
     const left = (screenWidth - DEFAULT_POPUP_WIDTH) / 2;
     const top = (screenHeight - DEFAULT_POPUP_HEIGHT) / 2;
 
-    const childWindow = window.selector.open(
-      url,
-      "MyNearWallet",
-      `width=${DEFAULT_POPUP_WIDTH},height=${DEFAULT_POPUP_HEIGHT},top=${top},left=${left}`
-    );
+    const childWindow = window.selector.open(url, "MyNearWallet", `width=${DEFAULT_POPUP_WIDTH},height=${DEFAULT_POPUP_HEIGHT},top=${top},left=${left}`);
 
     const id = await childWindow.windowIdPromise;
     if (!id) {
@@ -401,7 +367,7 @@ const MyNearWallet = async () => {
 
     async signAndSendTransactions({ transactions, network }: any) {
       if (!wallet[network].isSignedIn()) throw new Error("Wallet not signed in");
-      return wallet[network].signAndSendTransactions(transactions as Array<Transaction>);
+      return wallet[network].signAndSendTransactions(transactions);
     },
 
     async createSignedTransaction({ receiverId, actions, network }: any) {

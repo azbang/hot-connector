@@ -1,11 +1,23 @@
 import type { Account } from "@near-wallet-selector/core";
-import { EMeteorWalletSignInType, getNetworkPreset, MeteorWallet } from "@meteorwallet/sdk";
+import { EMeteorWalletSignInType, MeteorWallet } from "@meteorwallet/sdk";
 import { SelectorStorageKeyStore } from "./keystore";
 import * as nearAPI from "near-api-js";
+import { NearRpc } from "./rpc";
 
 const keyStore = new SelectorStorageKeyStore();
-const setupWalletState = async (network: string) => {
-  const near = await nearAPI.connect({ keyStore, ...getNetworkPreset(network), headers: {} });
+const defaults = {
+  mainnet: "https://relmn.aurora.dev",
+  testnet: "https://rpc.testnet.near.org",
+};
+
+const setupWalletState = async (network: "mainnet" | "testnet") => {
+  const near = await nearAPI.connect({
+    nodeUrl: window.selector?.providers?.[network][0] || defaults[network],
+    provider: new NearRpc(window.selector?.providers?.[network]),
+    networkId: network,
+    headers: {},
+  });
+
   const wallet = new MeteorWallet({ near, appKeyPrefix: "near_app" });
   return { wallet, keyStore };
 };
@@ -96,7 +108,6 @@ const createMeteorWallet = async () => {
 
     async verifyOwner({ network, message }: any) {
       const state = await getState(network);
-
       const response = await tryApprove({
         title: "Verify owner",
         button: "Open wallet",
@@ -121,7 +132,7 @@ const createMeteorWallet = async () => {
       throw new Error(`Couldn't sign message owner: ${response.message}`);
     },
 
-    async signAndSendTransaction({ network, signerId, receiverId, actions }: any) {
+    async signAndSendTransaction({ network, receiverId, actions }: any) {
       const state = await getState(network);
       if (!state.wallet.isSignedIn()) throw new Error("Wallet not signed in");
 
@@ -129,6 +140,8 @@ const createMeteorWallet = async () => {
       return await tryApprove({
         title: "Sign transaction",
         button: "Open wallet",
+
+        // @ts-ignore
         execute: async () => account["signAndSendTransaction_direct"]({ receiverId: receiverId, actions }),
       });
     },

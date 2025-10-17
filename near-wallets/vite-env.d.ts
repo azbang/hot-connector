@@ -10,6 +10,7 @@ interface Window {
       getProjectId: () => Promise<string>;
     };
 
+    providers: { mainnet: string[]; testnet: string[] };
     network: "testnet" | "mainnet";
     location: string;
 

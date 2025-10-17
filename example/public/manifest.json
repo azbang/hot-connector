@@ -1,0 +1,231 @@
+{
+  "version": "1.0.0",
+  "wallets": [
+    {
+      "id": "hot-wallet",
+      "name": "HOT Wallet",
+      "icon": "https://app.hot-labs.org/images/hot/hot-icon.png",
+      "description": "Secure Multichain wallet. Manage assets, refuel gas, and mine $HOT on any device with HOT Wallet",
+      "website": "https://hot-labs.org/wallet",
+      "version": "1.0.0",
+      "executor": "/repository/hotwallet.js",
+      "type": "sandbox",
+
+      "platform": {
+        "android": "https://play.google.com/store/apps/details?id=app.herewallet.hot&hl=en",
+        "ios": "https://apps.apple.com/us/app/hot-wallet/id6740916148",
+        "chrome": "https://chromewebstore.google.com/detail/hot-wallet/mpeengabcnhhjjgleiodimegnkpcenbk",
+        "firefox": "https://addons.mozilla.org/en-US/firefox/addon/hot-wallet",
+        "tga": "https://t.me/hot_wallet/app"
+      },
+
+      "features": {
+        "signMessage": true,
+        "signInWithoutAddKey": true,
+        "signAndSendTransaction": true,
+        "signAndSendTransactions": true
+      },
+
+      "permissions": {
+        "storage": true,
+        "allowsOpen": [
+          "https://download.hot-labs.org",
+          "https://hot-labs.org/wallet",
+          "https://t.me/hot_wallet/app",
+          "https://play.google.com",
+          "https://apps.apple.com",
+          "hotwallet://"
+        ]
+      }
+    },
+    {
+      "id": "near-mobile",
+      "name": "NEAR Mobile",
+      "icon": "https://is1-ssl.mzstatic.com/image/thumb/Purple221/v4/08/28/af/0828af98-0077-02ae-e1c7-cbaa94389179/AppIcon-0-0-1x_U007ephone-0-85-220.png/246x0w.webp",
+      "description": "Discover the only NEAR wallet you will need: NEAR Mobile, the most secure and comprehensive mobile wallet designed exclusively for the NEAR Blockchain",
+      "website": "https://nearmobile.app",
+      "executor": "/repository/near-mobile.js",
+      "type": "sandbox",
+      "version": "1.0.0",
+
+      "features": {
+        "signMessage": true,
+        "signInWithoutAddKey": true,
+        "signAndSendTransaction": true,
+        "signAndSendTransactions": true,
+        "testnet": true
+      },
+
+      "platform": {
+        "android": "https://play.google.com/store/apps/details?id=com.peersyst.nearmobilewallet",
+        "ios": "https://apps.apple.com/us/app/near-mobile-crypto-wallet/id6443501225"
+      },
+
+      "permissions": {
+        "storage": true,
+        "allowsOpen": ["https://nearmobile.app", "https://play.google.com", "https://apps.apple.com"]
+      }
+    },
+    {
+      "id": "mynearwallet",
+      "name": "MyNearWallet",
+      "icon": "https://www.mynearwallet.com/images/webclip.png",
+      "description": "Web wallet for NEAR.",
+      "website": "https://mynearwallet.com",
+      "version": "1.0.0",
+      "executor": "/repository/mnw.js",
+      "type": "sandbox",
+
+      "platform": {
+        "web": "https://app.mynearwallet.com"
+      },
+
+      "features": {
+        "signMessage": true,
+        "signInWithoutAddKey": true,
+        "signAndSendTransaction": true,
+        "signAndSendTransactions": true
+      },
+
+      "permissions": {
+        "storage": true,
+        "allowsOpen": ["https://app.mynearwallet.com"]
+      }
+    },
+    {
+      "id": "meteor-wallet",
+      "name": "Meteor Wallet",
+      "icon": "https://github.com/Meteor-Wallet/meteor-public/raw/main/logo_svg.svg",
+      "description": "The most simple and secure wallet to manage your crypto, access DeFi, and explore Web3",
+      "website": "https://meteorwallet.app/",
+      "version": "1.0.0",
+      "executor": "/repository/meteor.js",
+      "type": "sandbox",
+
+      "features": {
+        "signMessage": true,
+        "signInWithoutAddKey": true,
+        "signAndSendTransaction": true,
+        "signAndSendTransactions": true,
+        "mainnet": true,
+        "testnet": true
+      },
+
+      "platform": {
+        "web": "https://wallet.meteorwallet.app",
+        "chrome": "https://chromewebstore.google.com/detail/meteor-wallet/pcndjhkinnkaohffealmlmhaepkpmgkb"
+      },
+
+      "permissions": {
+        "storage": true,
+        "allowsOpen": ["https://wallet.meteorwallet.app"]
+      }
+    },
+    {
+      "id": "intear-wallet",
+      "name": "Intear Wallet",
+      "icon": "https://wallet.intear.tech/favicon.svg",
+      "description": "A fast and secure wallet for everyday interactions with dapps",
+      "website": "https://intea.rs/",
+      "version": "1.0.0",
+      "executor": "https://wallet.intear.tech/near-selector.js",
+      "type": "sandbox",
+      "features": {
+        "signMessage": true,
+        "signTransaction": false,
+        "signAndSendTransaction": true,
+        "signAndSendTransactions": true,
+        "signInWithoutAddKey": true,
+        "verifyOwner": false,
+        "testnet": true
+      },
+      "platform": {
+        "web": "https://wallet.intear.tech"
+      },
+      "permissions": {
+        "storage": true,
+        "location": true,
+        "allowsOpen": ["https://wallet.intear.tech", "https://logout-bridge-service.intear.tech"]
+      }
+    },
+    {
+      "id": "okx-wallet",
+      "name": "OKX Wallet",
+      "icon": "https://okx.com/favicon.ico",
+      "description": "OKX Wallet is a secure and easy-to-use wallet for the OKX ecosystem",
+      "website": "https://okx.com",
+      "version": "1.0.0",
+      "executor": "/repository/okx.js",
+      "type": "sandbox",
+      "platform": {
+        "web": "https://www.okx.com",
+        "chrome": "https://chromewebstore.google.com/detail/%E6%AC%A7%E6%98%93-web3-%E9%92%B1%E5%8C%85/mcohilncbfahbmgdjkbpemcciiolgcge",
+        "edge": "https://microsoftedge.microsoft.com/addons/detail/%E6%AC%A7%E6%98%93-web3-%E9%92%B1%E5%8C%85/pbpjkcldjiffchgbbndmhojiacbgflha",
+        "ios": "https://apps.apple.com/us/app/okx-wallet/id6463797825"
+      },
+      "permissions": {
+        "storage": true,
+        "allowsOpen": ["https://www.okx.com"],
+        "external": ["okxwallet.near"]
+      },
+      "features": {
+        "signMessage": true,
+        "signInWithoutAddKey": true,
+        "signAndSendTransaction": true,
+        "signAndSendTransactions": true
+      }
+    },
+    {
+      "id": "nightly-wallet",
+      "name": "Nightly Wallet",
+      "icon": "https://play-lh.googleusercontent.com/FVDtw6vCV9RFTAO7jjFf0juosjuQql3dHJIJtE30okJEn4R1om2YzJHclmiwd10CuIFi=w480-h960-rw",
+      "description": "Surf through the multichain Metaverse with Nightly",
+      "website": "https://nightly.app",
+      "version": "1.0.0",
+      "executor": "/repository/nightly.js",
+      "type": "sandbox",
+      "platform": {
+        "chrome": "https://chromewebstore.google.com/detail/nightly/fiikommddbeccaoicoejoniammnalkfa"
+      },
+      "permissions": {
+        "storage": true,
+        "external": ["nightly.near"],
+        "allowsOpen": ["https://nightly.app", "https://chromewebstore.google.com/detail/nightly/fiikommddbeccaoicoejoniammnalkfa"]
+      },
+      "features": {
+        "signMessage": true,
+        "signInWithoutAddKey": true,
+        "signAndSendTransaction": true,
+        "signAndSendTransactions": true,
+        "testnet": true
+      }
+    },
+    {
+      "id": "unity-wallet",
+      "name": "Unity Wallet",
+      "icon": "https://framerusercontent.com/images/FeQXWfCR1lxfEWo6ka790vBZnI.png",
+      "description": "Discover the most secure, feature-packed, self-custodial crypto and Web3 wallet. Unlock limitless possibilities.",
+      "website": "https://unitywallet.com",
+      "version": "1.0.0",
+      "executor": "/repository/wallet-connect.js",
+      "type": "sandbox",
+      "platform": {
+        "web": "https://unitywallet.com",
+        "android": "https://unitywallet.oneclick.me",
+        "ios": "https://unitywallet.oneclick.me"
+      },
+      "permissions": {
+        "storage": true,
+        "clipboardWrite": true,
+        "walletConnect": true
+      },
+      "features": {
+        "signMessage": true,
+        "signInWithoutAddKey": true,
+        "signAndSendTransaction": true,
+        "signAndSendTransactions": true,
+        "testnet": true
+      }
+    }
+  ]
+}

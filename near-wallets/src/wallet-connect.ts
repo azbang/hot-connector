@@ -1,11 +1,17 @@
 import type { KeyPair, providers } from "near-api-js";
+import { InternalAction, SignMessageParams } from "@near-wallet-selector/core";
 import type { AccessKeyViewRaw } from "near-api-js/lib/providers/provider.js";
-import type { Transaction, Account, SignMessageParams } from "@near-wallet-selector/core";
 import { createAction } from "@near-wallet-selector/wallet-utils";
 import { WalletConnectModal } from "@walletconnect/modal";
 import * as nearAPI from "near-api-js";
 
 import { SelectorStorageKeyStore } from "./keystore";
+
+interface Transaction {
+  signerId: string;
+  receiverId: string;
+  actions: Array<InternalAction>;
+}
 
 interface LimitedAccessKeyPair {
   accountId: string;
@@ -17,16 +23,9 @@ interface LimitedAccessAccount {
   publicKey: string;
 }
 
-const WC_METHODS = [
-  "near_signIn",
-  "near_signOut",
-  "near_getAccounts",
-  "near_signTransaction",
-  "near_signTransactions",
-  "near_signMessage",
-];
-
+const WC_METHODS = ["near_signIn", "near_signOut", "near_getAccounts", "near_signTransaction", "near_signTransactions", "near_signMessage"];
 const WC_EVENTS = ["chainChanged", "accountsChanged"];
+
 const provider = new nearAPI.providers.JsonRpcProvider({ url: "https://relmn.aurora.dev" });
 const keystore = new SelectorStorageKeyStore();
 
@@ -107,7 +106,7 @@ const getSignatureData = (result: Uint8Array) => {
 };
 
 const WalletConnect = async () => {
-  const getAccounts = async (network: string): Promise<Array<Account>> => {
+  const getAccounts = async (network: string): Promise<Array<{ accountId: string; publicKey: string }>> => {
     const session = await window.selector.walletConnect.getSession();
     if (!session) return [];
 
@@ -126,7 +125,7 @@ const WalletConnect = async () => {
     return newAccounts;
   };
 
-  const validateAccessKey = (transaction: Transaction, accessKey: AccessKeyViewRaw) => {
+  const validateAccessKey = (transaction: { receiverId: string; actions: Array<InternalAction> }, accessKey: AccessKeyViewRaw) => {
     if (accessKey.permission === "FullAccess") return accessKey;
     const { receiver_id, method_names } = accessKey.permission.FunctionCall;
     if (transaction.receiverId !== receiver_id) return null;
@@ -139,7 +138,7 @@ const WalletConnect = async () => {
     });
   };
 
-  const signTransactions = async (transactions: Array<Transaction>, network: string) => {
+  const signTransactions = async (transactions: Array<{ signerId: string; receiverId: string; actions: Array<InternalAction> }>, network: string) => {
     const signer = new nearAPI.InMemorySigner(keystore);
     const signedTransactions: Array<nearAPI.transactions.SignedTransaction> = [];
     const block = await provider.block({ finality: "final" });
@@ -242,7 +241,6 @@ const WalletConnect = async () => {
     });
 
     const signatureData = getSignatureData(result);
-
     return nearAPI.transactions.SignedTransaction.decode(Buffer.from(signatureData));
   };
 
