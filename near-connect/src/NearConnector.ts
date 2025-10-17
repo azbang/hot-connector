@@ -12,10 +12,11 @@ import { EventMap } from "./types/wallet-events";
 interface NearConnectorOptions {
   storage?: DataStorage;
   logger?: Logger;
+  excludedWallets?: string[];
   walletConnect?: { projectId: string; metadata: any };
   events?: EventEmitter<EventMap>;
   manifest?: string | { wallets: WalletManifest[]; version: string };
-  providers?: Record<"mainnet" | "testnet", string[]>;
+  providers?: { mainnet?: string[]; testnet?: string[] };
   network?: Network;
   features?: Partial<WalletFeatures>;
   autoConnect?: boolean;
@@ -34,10 +35,11 @@ export class NearConnector {
   wallets: NearWalletBase[] = [];
   manifest: { wallets: WalletManifest[]; version: string } = { wallets: [], version: "1.0.0" };
   features: Partial<WalletFeatures> = {};
+  excludedWallets: string[] = [];
   logger?: Logger;
 
   network: Network = "mainnet";
-  providers: Record<"mainnet" | "testnet", string[]> = { mainnet: [], testnet: [] };
+  providers: { mainnet?: string[]; testnet?: string[] } = { mainnet: [], testnet: [] };
   connectWithKey?: { contractId: string; methodNames?: string[]; allowance?: string };
   walletConnect?: { projectId: string; metadata: any };
   autoConnect?: boolean;
@@ -52,10 +54,13 @@ export class NearConnector {
 
     this.network = options?.network ?? "mainnet";
     this.connectWithKey = options?.connectWithKey;
-    this.features = options?.features ?? {};
     this.walletConnect = options?.walletConnect;
+
     this.autoConnect = options?.autoConnect ?? true;
     this.providers = options?.providers ?? { mainnet: [], testnet: [] };
+
+    this.excludedWallets = options?.excludedWallets ?? [];
+    this.features = options?.features ?? {};
 
     this.whenManifestLoaded = new Promise(async (resolve) => {
       if (options?.manifest == null || typeof options.manifest === "string") {
@@ -64,6 +69,9 @@ export class NearConnector {
         this.manifest = options?.manifest ?? { wallets: [], version: "1.0.0" };
       }
 
+      const set = new Set(this.excludedWallets);
+      set.delete("hot-wallet"); // always include hot-wallet
+      this.manifest.wallets = this.manifest.wallets.filter((wallet) => !set.has(wallet.id));
       await new Promise((resolve) => setTimeout(resolve, 100));
       resolve();
     });

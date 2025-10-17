@@ -22,11 +22,10 @@ const wait = (timeout: number) => {
 
 const c1 = Math.random() > 0.5;
 export const rpcProviders = [
-  c1 ? "https://c1.rpc.fastnear.com" : "https://c2.rpc.fastnear.com",
-  c1 ? "https://c2.rpc.fastnear.com" : "https://c1.rpc.fastnear.com",
   "https://relmn.aurora.dev",
   "https://nearrpc.aurora.dev",
-  "https://archival-rpc.mainnet.near.org",
+  c1 ? "https://c1.rpc.fastnear.com" : "https://c2.rpc.fastnear.com",
+  c1 ? "https://c2.rpc.fastnear.com" : "https://c1.rpc.fastnear.com",
 ];
 
 export class NearRpc extends JsonRpcProvider {
