@@ -87,20 +87,8 @@ export class NearWalletsPopup extends Popup<{ wallets: WalletManifest[]; showSet
         xmlns="http://www.w3.org/2000/svg"
         style="margin-right: 4px;"
       >
-        <path
-          d="M18 6L6 18"
-          stroke="rgba(255,255,255,0.5)"
-          stroke-width="2"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-        />
-        <path
-          d="M6 6L18 18"
-          stroke="rgba(255,255,255,0.5)"
-          stroke-width="2"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-        />
+        <path d="M18 6L6 18" stroke="rgba(255,255,255,0.5)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+        <path d="M6 6L18 18" stroke="rgba(255,255,255,0.5)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
       </svg>
     `;
 
@@ -124,13 +112,7 @@ export class NearWalletsPopup extends Popup<{ wallets: WalletManifest[]; showSet
             <div class="modal-header">
               <button class="back-button" style="left: 16px; right: unset;">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path
-                    d="M15 18L9 12L15 6"
-                    stroke="rgba(255,255,255,0.5)"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  />
+                  <path d="M15 18L9 12L15 6" stroke="rgba(255,255,255,0.5)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                 </svg>
               </button>
               <p>Settings</p>
@@ -139,13 +121,10 @@ export class NearWalletsPopup extends Popup<{ wallets: WalletManifest[]; showSet
             <div class="modal-body">
               <p style="text-align: left;">
                 You can add your wallet to dapp for debug,
-                <a href="https://github.com/hot-labs/near-connect" target="_blank">read the documentation.</a> Paste
-                your manifest and click "Add".
+                <a href="https://github.com/azbang/hot-connector" target="_blank">read the documentation.</a> Paste your manifest and click "Add".
               </p>
 
-              <textarea style="width: 100%;" id="debug-manifest-input" rows="10">
-${JSON.stringify(debugManifest, null, 2)}</textarea
-              >
+              <textarea style="width: 100%;" id="debug-manifest-input" rows="10">${JSON.stringify(debugManifest, null, 2)}</textarea>
               <button class="add-debug-manifest-button">Add</button>
             </div>
 

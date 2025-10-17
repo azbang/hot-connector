@@ -37,7 +37,7 @@ export class NearRpc extends JsonRpcProvider {
   constructor(providers = rpcProviders, private timeout = 30_000, private triesCountForEveryProvider = 3, private incrementTimout = true) {
     super({ url: "" });
     this.currentProviderIndex = 0;
-    this.providers = providers;
+    this.providers = providers.length > 0 ? providers : rpcProviders;
     this.startTimeout = timeout;
   }
 

@@ -8,7 +8,7 @@
       "description": "Secure Multichain wallet. Manage assets, refuel gas, and mine $HOT on any device with HOT Wallet",
       "website": "https://hot-labs.org/wallet",
       "version": "1.0.0",
-      "executor": "/repository/hotwallet.js",
+      "executor": "/hot-connector/repository/hotwallet.js",
       "type": "sandbox",
 
       "platform": {
@@ -44,7 +44,7 @@
       "icon": "https://is1-ssl.mzstatic.com/image/thumb/Purple221/v4/08/28/af/0828af98-0077-02ae-e1c7-cbaa94389179/AppIcon-0-0-1x_U007ephone-0-85-220.png/246x0w.webp",
       "description": "Discover the only NEAR wallet you will need: NEAR Mobile, the most secure and comprehensive mobile wallet designed exclusively for the NEAR Blockchain",
       "website": "https://nearmobile.app",
-      "executor": "/repository/near-mobile.js",
+      "executor": "/hot-connector/repository/near-mobile.js",
       "type": "sandbox",
       "version": "1.0.0",
 
@@ -73,7 +73,7 @@
       "description": "Web wallet for NEAR.",
       "website": "https://mynearwallet.com",
       "version": "1.0.0",
-      "executor": "/repository/mnw.js",
+      "executor": "/hot-connector/repository/mnw.js",
       "type": "sandbox",
 
       "platform": {
@@ -99,7 +99,7 @@
       "description": "The most simple and secure wallet to manage your crypto, access DeFi, and explore Web3",
       "website": "https://meteorwallet.app/",
       "version": "1.0.0",
-      "executor": "/repository/meteor.js",
+      "executor": "/hot-connector/repository/meteor.js",
       "type": "sandbox",
 
       "features": {
@@ -155,7 +155,7 @@
       "description": "OKX Wallet is a secure and easy-to-use wallet for the OKX ecosystem",
       "website": "https://okx.com",
       "version": "1.0.0",
-      "executor": "/repository/okx.js",
+      "executor": "/hot-connector/repository/okx.js",
       "type": "sandbox",
       "platform": {
         "web": "https://www.okx.com",
@@ -182,7 +182,7 @@
       "description": "Surf through the multichain Metaverse with Nightly",
       "website": "https://nightly.app",
       "version": "1.0.0",
-      "executor": "/repository/nightly.js",
+      "executor": "/hot-connector/repository/nightly.js",
       "type": "sandbox",
       "platform": {
         "chrome": "https://chromewebstore.google.com/detail/nightly/fiikommddbeccaoicoejoniammnalkfa"
@@ -207,7 +207,7 @@
       "description": "Discover the most secure, feature-packed, self-custodial crypto and Web3 wallet. Unlock limitless possibilities.",
       "website": "https://unitywallet.com",
       "version": "1.0.0",
-      "executor": "/repository/wallet-connect.js",
+      "executor": "/hot-connector/repository/wallet-connect.js",
       "type": "sandbox",
       "platform": {
         "web": "https://unitywallet.com",

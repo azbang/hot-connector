@@ -2,7 +2,13 @@ export const css = (id: string) => /*css*/ `
 ${id} * {
   box-sizing: border-box;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+  -ms-overflow-style: none; 
+  scrollbar-width: none; 
   color: #fff;
+}
+
+${id} *::-webkit-scrollbar { 
+  display: none;
 }
 
 ${id} p, h1, h2, h3, h4, h5, h6 {

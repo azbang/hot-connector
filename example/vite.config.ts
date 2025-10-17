@@ -5,5 +5,5 @@ import tailwindcss from "@tailwindcss/vite";
 
 export default defineConfig({
   plugins: [nodePolyfills(), react(), tailwindcss()],
-  publicDir: "hot-connector",
+  base: "/hot-connector/",
 });

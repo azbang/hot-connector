@@ -5,6 +5,8 @@ import { uuid4 } from "../helpers/uuid";
 
 import IframeExecutor from "./iframe";
 
+const cacheId = uuid4();
+
 class SandboxExecutor {
   private activePanels: Record<string, Window> = {};
   readonly storageSpace: string;
@@ -269,10 +271,11 @@ class SandboxExecutor {
       return this.actualCode;
     }
 
-    const url = parseUrl(executor.manifest.executor);
+    let url = parseUrl(executor.manifest.executor);
+    if (!url) url = parseUrl(location.origin + executor.manifest.executor); // relative url
     if (!url) throw new Error("Invalid executor URL");
 
-    url.searchParams.set("nonce", uuid4());
+    url.searchParams.set("nonce", cacheId);
     const newVersion = await fetch(url.toString()).then((res) => res.text());
     this.connector.logger?.log(`New version of code fetched`);
     this.actualCode = newVersion;

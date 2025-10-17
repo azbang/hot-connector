@@ -17,7 +17,7 @@ export const ExampleNEAR: FC = () => {
   }
 
   const [connector] = useState<NearConnector>(() => {
-    const connector = new NearConnector({ network, manifest: "/manifest.json" });
+    const connector = new NearConnector({ network, manifest: "/hot-connector/manifest.json" });
     connector.on("wallet:signIn", async (t) => {
       setWallet(await connector.wallet());
       setAccount(t.accounts[0]);

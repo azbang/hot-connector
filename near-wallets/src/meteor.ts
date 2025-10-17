@@ -15,6 +15,7 @@ const setupWalletState = async (network: "mainnet" | "testnet") => {
     nodeUrl: window.selector?.providers?.[network][0] || defaults[network],
     provider: new NearRpc(window.selector?.providers?.[network]),
     networkId: network,
+    keyStore: keyStore,
     headers: {},
   });
 
