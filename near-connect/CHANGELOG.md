@@ -1,3 +1,10 @@
+# 0.6.7
+
+- Move all intents specific code and multichain connector to @hot-labs/wibe3
+- remove connectWithKey option
+- add excludeWallets, providers and isBannedNearAddress options
+- some cache improvements
+
 # 0.6.4
 
 - Add Intents class and more exports

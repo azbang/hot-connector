@@ -19,12 +19,6 @@ interface NearConnectorOptions {
   autoConnect?: boolean;
   network?: Network;
 
-  connectWithKey?: {
-    contractId: string;
-    methodNames?: string[];
-    allowance?: string;
-  };
-
   manifest?: string | { wallets: WalletManifest[]; version: string };
   walletConnect?: { projectId: string; metadata: any };
 
@@ -42,13 +36,13 @@ export class NearConnector {
   wallets: NearWalletBase[] = [];
   manifest: { wallets: WalletManifest[]; version: string } = { wallets: [], version: "1.0.0" };
   features: Partial<WalletFeatures> = {};
+  network: Network = "mainnet";
 
   providers: { mainnet?: string[]; testnet?: string[] } = { mainnet: [], testnet: [] };
   walletConnect?: { projectId: string; metadata: any };
-  autoConnect?: boolean;
 
-  network: Network = "mainnet";
   excludedWallets: string[] = [];
+  autoConnect?: boolean;
 
   isBannedNearAddress?: (address: string) => Promise<boolean>;
 
