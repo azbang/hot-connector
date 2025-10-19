@@ -18,11 +18,7 @@ class IframeExecutor {
     this.readyPromiseResolve = resolve;
   });
 
-  constructor(
-    readonly executor: SandboxExecutor,
-    code: string,
-    onMessage: (iframe: IframeExecutor, event: MessageEvent) => void
-  ) {
+  constructor(readonly executor: SandboxExecutor, code: string, onMessage: (iframe: IframeExecutor, event: MessageEvent) => void) {
     this.origin = uuid4();
     this.handler = (event: MessageEvent<any>) => {
       if (event.data.origin !== this.origin) return;

@@ -1,6 +1,7 @@
-import type { FinalExecutionOutcome } from "@near-wallet-selector/core";
 import {
   Account,
+  FinalExecutionOutcome,
+  Network,
   SignAndSendTransactionParams,
   SignAndSendTransactionsParams,
   SignedMessage,
@@ -18,32 +19,37 @@ export class SandboxWallet {
     this.executor = new SandboxExecutor(connector, manifest);
   }
 
-  async signIn(params: SignInParams): Promise<Array<Account>> {
-    return this.executor.call("wallet:signIn", { ...params, network: params.network || this.connector.network });
+  async signIn(params?: SignInParams): Promise<Array<Account>> {
+    const network = params?.network || this.connector.network;
+    return this.executor.call("wallet:signIn", { ...params, network, contractId: params?.contractId || "" });
   }
 
-  async signOut(): Promise<void> {
-    await this.executor.call("wallet:signOut", { network: this.connector.network });
+  async signOut(data?: { network?: Network }): Promise<void> {
+    const args = { ...data, network: data?.network || this.connector.network };
+    await this.executor.call("wallet:signOut", args);
     await this.executor.clearStorage();
   }
 
-  async getAccounts(): Promise<Array<Account>> {
-    return this.executor.call("wallet:getAccounts", { network: this.connector.network });
+  async getAccounts(data?: { network?: Network }): Promise<Array<Account>> {
+    const args = { ...data, network: data?.network || this.connector.network };
+    return this.executor.call("wallet:getAccounts", args);
   }
 
   async signAndSendTransaction(params: SignAndSendTransactionParams): Promise<FinalExecutionOutcome> {
-    const network = params.network || this.connector.network;
-    return this.executor.call("wallet:signAndSendTransaction", { ...params, network });
+    await this.connector.validateBannedNearAddressInTx(params);
+    const args = { ...params, network: params.network || this.connector.network };
+    return this.executor.call("wallet:signAndSendTransaction", args);
   }
 
   async signAndSendTransactions(params: SignAndSendTransactionsParams): Promise<Array<FinalExecutionOutcome>> {
-    const network = params.network || this.connector.network;
-    return this.executor.call("wallet:signAndSendTransactions", { ...params, network });
+    const args = { ...params, network: params.network || this.connector.network };
+    for (const tx of params.transactions) await this.connector.validateBannedNearAddressInTx(tx);
+    return this.executor.call("wallet:signAndSendTransactions", args);
   }
 
   async signMessage(params: SignMessageParams): Promise<SignedMessage> {
-    const network = params.network || this.connector.network;
-    return this.executor.call("wallet:signMessage", { ...params, network });
+    const args = { ...params, network: params.network || this.connector.network };
+    return this.executor.call("wallet:signMessage", args);
   }
 }
 

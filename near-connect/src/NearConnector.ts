@@ -3,46 +3,54 @@ import { NearWalletsPopup } from "./popups/NearWalletsPopup";
 import { LocalStorage, DataStorage } from "./helpers/storage";
 import IndexedDB from "./helpers/indexdb";
 
-import { EventNearWalletInjected, WalletManifest, Network, WalletFeatures, Logger, NearWalletBase } from "./types/wallet";
+import { EventNearWalletInjected, WalletManifest, Network, WalletFeatures, Logger, NearWalletBase, Account } from "./types/wallet";
 import { ParentFrameWallet } from "./ParentFrameWallet";
 import { InjectedWallet } from "./InjectedWallet";
 import { SandboxWallet } from "./SandboxedWallet";
 import { EventMap } from "./types/wallet-events";
+import { Action } from "./types/transactions";
 
 interface NearConnectorOptions {
-  storage?: DataStorage;
-  logger?: Logger;
-  excludedWallets?: string[];
-  walletConnect?: { projectId: string; metadata: any };
-  events?: EventEmitter<EventMap>;
-  manifest?: string | { wallets: WalletManifest[]; version: string };
+  isBannedNearAddress?: (address: string) => Promise<boolean>;
+
   providers?: { mainnet?: string[]; testnet?: string[] };
-  network?: Network;
   features?: Partial<WalletFeatures>;
+  excludedWallets?: string[];
   autoConnect?: boolean;
+  network?: Network;
+
   connectWithKey?: {
     contractId: string;
     methodNames?: string[];
     allowance?: string;
   };
+
+  manifest?: string | { wallets: WalletManifest[]; version: string };
+  walletConnect?: { projectId: string; metadata: any };
+
+  events?: EventEmitter<EventMap>;
+  storage?: DataStorage;
+  logger?: Logger;
 }
 
 export class NearConnector {
   private storage: DataStorage;
   readonly events: EventEmitter<EventMap>;
   readonly db: IndexedDB;
+  logger?: Logger;
 
   wallets: NearWalletBase[] = [];
   manifest: { wallets: WalletManifest[]; version: string } = { wallets: [], version: "1.0.0" };
   features: Partial<WalletFeatures> = {};
-  excludedWallets: string[] = [];
-  logger?: Logger;
 
-  network: Network = "mainnet";
   providers: { mainnet?: string[]; testnet?: string[] } = { mainnet: [], testnet: [] };
-  connectWithKey?: { contractId: string; methodNames?: string[]; allowance?: string };
   walletConnect?: { projectId: string; metadata: any };
   autoConnect?: boolean;
+
+  network: Network = "mainnet";
+  excludedWallets: string[] = [];
+
+  isBannedNearAddress?: (address: string) => Promise<boolean>;
 
   readonly whenManifestLoaded: Promise<void>;
 
@@ -53,8 +61,8 @@ export class NearConnector {
     this.logger = options?.logger;
 
     this.network = options?.network ?? "mainnet";
-    this.connectWithKey = options?.connectWithKey;
     this.walletConnect = options?.walletConnect;
+    this.isBannedNearAddress = options?.isBannedNearAddress;
 
     this.autoConnect = options?.autoConnect ?? true;
     this.providers = options?.providers ?? { mainnet: [], testnet: [] };
@@ -71,7 +79,14 @@ export class NearConnector {
 
       const set = new Set(this.excludedWallets);
       set.delete("hot-wallet"); // always include hot-wallet
-      this.manifest.wallets = this.manifest.wallets.filter((wallet) => !set.has(wallet.id));
+
+      this.manifest.wallets = this.manifest.wallets.filter((wallet) => {
+        // Remove wallet with walletConnect permission but no projectId is provided
+        if (wallet.permissions.walletConnect && !this.walletConnect) return false;
+        if (set.has(wallet.id)) return false; // excluded wallets
+        return true;
+      });
+
       await new Promise((resolve) => setTimeout(resolve, 100));
       resolve();
     });
@@ -143,6 +158,33 @@ export class NearConnector {
     return manifest;
   }
 
+  async disconnectIfBanned(wallet: NearWalletBase, accounts: Account[]) {
+    if (!this.isBannedNearAddress) return;
+    for (const account of accounts) {
+      const isBanned = await this.isBannedNearAddress(account.accountId);
+      if (isBanned) {
+        await this.disconnect(wallet);
+        throw new Error("Banned near address");
+      }
+    }
+  }
+
+  async validateBannedNearAddressInTx(tx: { receiverId: string; actions: Action[] }) {
+    if (!this.isBannedNearAddress) return;
+
+    const isBanned = await this.isBannedNearAddress(tx.receiverId);
+    if (isBanned) throw new Error("Banned receiver address");
+
+    for (const action of tx.actions) {
+      if (action.type === "FunctionCall") {
+        const receiverId = action.params.args["receiver_id"];
+        if (typeof receiverId !== "string") continue;
+        const isBanned = await this.isBannedNearAddress(receiverId);
+        if (isBanned) throw new Error("Banned receiver address");
+      }
+    }
+  }
+
   async switchNetwork(network: "mainnet" | "testnet") {
     await this.disconnect().catch(() => {});
     this.network = network;
@@ -211,10 +253,12 @@ export class NearConnector {
       await this.storage.set("selected-wallet", id);
       this.logger?.log(`Set preferred wallet, try to signIn`, id);
 
-      const accounts = await wallet.signIn(this.connectWithKey ?? { contractId: "" });
-      this.logger?.log(`Signed in to wallet`, id, accounts);
-
+      const accounts = await wallet.signIn();
       if (!accounts?.length) throw new Error("Failed to sign in");
+
+      await this.disconnectIfBanned(wallet, accounts);
+
+      this.logger?.log(`Signed in to wallet`, id, accounts);
       this.events.emit("wallet:signIn", { wallet, accounts, success: true });
       return wallet;
     } catch (e) {
@@ -239,6 +283,9 @@ export class NearConnector {
 
     const accounts = await wallet.getAccounts();
     if (!accounts?.length) throw new Error("No accounts found");
+
+    await this.disconnectIfBanned(wallet, accounts);
+
     return { wallet, accounts };
   }
 

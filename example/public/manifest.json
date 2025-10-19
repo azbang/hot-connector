@@ -41,7 +41,7 @@
     {
       "id": "near-mobile",
       "name": "NEAR Mobile",
-      "icon": "https://is1-ssl.mzstatic.com/image/thumb/Purple221/v4/08/28/af/0828af98-0077-02ae-e1c7-cbaa94389179/AppIcon-0-0-1x_U007ephone-0-85-220.png/246x0w.webp",
+      "icon": "https://storage.herewallet.app/upload/179839f01189bc54afea2fd34eb092ddb6d63c97b5c8c9e418317285fd751f0c.webp",
       "description": "Discover the only NEAR wallet you will need: NEAR Mobile, the most secure and comprehensive mobile wallet designed exclusively for the NEAR Blockchain",
       "website": "https://nearmobile.app",
       "executor": "/hot-connector/repository/near-mobile.js",
@@ -69,7 +69,7 @@
     {
       "id": "mynearwallet",
       "name": "MyNearWallet",
-      "icon": "https://www.mynearwallet.com/images/webclip.png",
+      "icon": "https://storage.herewallet.app/upload/d0544304123d10518af961a15d5722ff1cef7abf62155f830e6d733e41f7da4b.png",
       "description": "Web wallet for NEAR.",
       "website": "https://mynearwallet.com",
       "version": "1.0.0",
@@ -95,7 +95,7 @@
     {
       "id": "meteor-wallet",
       "name": "Meteor Wallet",
-      "icon": "https://github.com/Meteor-Wallet/meteor-public/raw/main/logo_svg.svg",
+      "icon": "https://storage.herewallet.app/upload/9c3981ca59212248e09d37011c07492bf1e19d7d55b9210213af3be6079a05ae.svg",
       "description": "The most simple and secure wallet to manage your crypto, access DeFi, and explore Web3",
       "website": "https://meteorwallet.app/",
       "version": "1.0.0",
@@ -124,7 +124,7 @@
     {
       "id": "intear-wallet",
       "name": "Intear Wallet",
-      "icon": "https://wallet.intear.tech/favicon.svg",
+      "icon": "https://storage.herewallet.app/upload/3f24b26bb142cd65ee694b78f8b3004976ebd97d9fc82f4c07d99b27bc124672.png",
       "description": "A fast and secure wallet for everyday interactions with dapps",
       "website": "https://intea.rs/",
       "version": "1.0.0",
@@ -151,7 +151,7 @@
     {
       "id": "okx-wallet",
       "name": "OKX Wallet",
-      "icon": "https://okx.com/favicon.ico",
+      "icon": "https://storage.herewallet.app/upload/cd4ada38f27715b92602fb5f723c2580d7935e5b815b81169cd21b9ead683bfb.svg",
       "description": "OKX Wallet is a secure and easy-to-use wallet for the OKX ecosystem",
       "website": "https://okx.com",
       "version": "1.0.0",
@@ -159,14 +159,19 @@
       "type": "sandbox",
       "platform": {
         "web": "https://www.okx.com",
-        "chrome": "https://chromewebstore.google.com/detail/%E6%AC%A7%E6%98%93-web3-%E9%92%B1%E5%8C%85/mcohilncbfahbmgdjkbpemcciiolgcge",
-        "edge": "https://microsoftedge.microsoft.com/addons/detail/%E6%AC%A7%E6%98%93-web3-%E9%92%B1%E5%8C%85/pbpjkcldjiffchgbbndmhojiacbgflha",
+        "chrome": "https://chromewebstore.google.com/detail/okx-wallet/mcohilncbfahbmgdjkbpemcciiolgcge",
+        "edge": "https://microsoftedge.microsoft.com/addons/detail/okx-wallet/pbpjkcldjiffchgbbndmhojiacbgflha",
         "ios": "https://apps.apple.com/us/app/okx-wallet/id6463797825"
       },
       "permissions": {
         "storage": true,
-        "allowsOpen": ["https://www.okx.com"],
-        "external": ["okxwallet.near"]
+        "external": ["okxwallet.near"],
+        "allowsOpen": [
+          "https://www.okx.com",
+          "https://apps.apple.com/us/app/okx-wallet",
+          "https://microsoftedge.microsoft.com/addons/detail/okx-wallet",
+          "https://chromewebstore.google.com/detail/okx-wallet"
+        ]
       },
       "features": {
         "signMessage": true,
@@ -178,7 +183,7 @@
     {
       "id": "nightly-wallet",
       "name": "Nightly Wallet",
-      "icon": "https://play-lh.googleusercontent.com/FVDtw6vCV9RFTAO7jjFf0juosjuQql3dHJIJtE30okJEn4R1om2YzJHclmiwd10CuIFi=w480-h960-rw",
+      "icon": "https://storage.herewallet.app/upload/6947eb5c14c65a715fb49a08e5937dcecc994bf224b3869b9878bd7a7db068f9.webp",
       "description": "Surf through the multichain Metaverse with Nightly",
       "website": "https://nightly.app",
       "version": "1.0.0",
@@ -203,7 +208,7 @@
     {
       "id": "unity-wallet",
       "name": "Unity Wallet",
-      "icon": "https://framerusercontent.com/images/FeQXWfCR1lxfEWo6ka790vBZnI.png",
+      "icon": "https://storage.herewallet.app/upload/e596491a4fcd2d352ffff15bfe4a3fc6c0d0ed29ac9d43edc7501d20d9b667bc.png",
       "description": "Discover the most secure, feature-packed, self-custodial crypto and Web3 wallet. Unlock limitless possibilities.",
       "website": "https://unitywallet.com",
       "version": "1.0.0",

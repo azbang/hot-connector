@@ -1,5 +1,7 @@
-import type { providers } from "near-api-js";
+import type { FinalExecutionOutcome } from "@near-js/types";
 import type { Transaction, Action } from "./transactions";
+
+export type { FinalExecutionOutcome };
 
 export type Logger = {
   log: (...logs: any[]) => void;
@@ -18,7 +20,7 @@ export interface SignInParams {
   /**
    * Account ID of the Smart Contract.
    */
-  contractId: string;
+  contractId?: string;
   /**
    * Specify limited access to particular methods on the Smart Contract.
    */
@@ -50,7 +52,7 @@ export interface SignAndSendTransactionParams {
   /**
    * Account ID to receive the transaction. Defaults to `contractId` defined in `init`.
    */
-  receiverId?: string;
+  receiverId: string;
   /**
    * NEAR Action(s) to sign and send to the network (e.g. `FunctionCall`). You can find more information on `Action` {@link https://github.com/near/wallet-selector/blob/main/packages/core/docs/api/transactions.md | here}.
    */
@@ -116,7 +118,7 @@ export interface NearWalletBase {
   /**
    * Programmatically sign in. Hardware wallets (e.g. Ledger) require `derivationPaths` to validate access key permissions.
    */
-  signIn(params: SignInParams): Promise<Array<Account>>;
+  signIn(params?: SignInParams): Promise<Array<Account>>;
   /**
    * Sign out from the wallet.
    */
@@ -131,12 +133,12 @@ export interface NearWalletBase {
    * Signs one or more NEAR Actions before sending to the network.
    * The user must be signed in to call this method as there's at least charges for gas spent.
    */
-  signAndSendTransaction(params: SignAndSendTransactionParams): Promise<providers.FinalExecutionOutcome>;
+  signAndSendTransaction(params: SignAndSendTransactionParams): Promise<FinalExecutionOutcome>;
   /**
    * Signs one or more transactions before sending to the network.
    * The user must be signed in to call this method as there's at least charges for gas spent.
    */
-  signAndSendTransactions(params: SignAndSendTransactionsParams): Promise<Array<providers.FinalExecutionOutcome>>;
+  signAndSendTransactions(params: SignAndSendTransactionsParams): Promise<Array<FinalExecutionOutcome>>;
   signMessage(params: SignMessageParams): Promise<SignedMessage>;
 }
 

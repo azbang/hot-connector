@@ -1,7 +1,6 @@
-import type { FinalExecutionOutcome } from "@near-wallet-selector/core";
-
 import {
   Account,
+  FinalExecutionOutcome,
   NearWalletBase,
   Network,
   SignAndSendTransactionParams,
@@ -19,8 +18,9 @@ export class InjectedWallet {
     return this.wallet.manifest;
   }
 
-  async signIn(params: SignInParams): Promise<Array<Account>> {
-    return this.wallet.signIn({ ...params, network: params.network || this.connector.network });
+  async signIn(params?: SignInParams): Promise<Array<Account>> {
+    const network = params?.network || this.connector.network;
+    return this.wallet.signIn({ ...params, network, contractId: params?.contractId || "" });
   }
 
   async signOut(data?: { network?: Network }): Promise<void> {
@@ -32,6 +32,8 @@ export class InjectedWallet {
   }
 
   async signAndSendTransaction(params: SignAndSendTransactionParams): Promise<FinalExecutionOutcome> {
+    await this.connector.validateBannedNearAddressInTx(params);
+
     const network = params.network || this.connector.network;
     const result = await this.wallet.signAndSendTransaction({ ...params, network });
     if (!result) throw new Error("No result from wallet");
@@ -42,6 +44,7 @@ export class InjectedWallet {
   }
 
   async signAndSendTransactions(params: SignAndSendTransactionsParams): Promise<Array<FinalExecutionOutcome>> {
+    for (const tx of params.transactions) await this.connector.validateBannedNearAddressInTx(tx);
     const network = params.network || this.connector.network;
     const result = await this.wallet.signAndSendTransactions({ ...params, network });
     if (!result) throw new Error("No result from wallet");

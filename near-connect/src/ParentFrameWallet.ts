@@ -1,8 +1,8 @@
-import type { FinalExecutionOutcome } from "@near-wallet-selector/core";
 import { uuid4 } from "./helpers/uuid";
 import { NearConnector } from "./NearConnector";
 import {
   Account,
+  FinalExecutionOutcome,
   Network,
   SignAndSendTransactionParams,
   SignAndSendTransactionsParams,
@@ -32,29 +32,37 @@ export class ParentFrameWallet {
     });
   }
 
-  async signIn(params: SignInParams): Promise<Array<Account>> {
-    const result = await this.callParentFrame("near:signIn", params);
+  async signIn(params?: SignInParams): Promise<Array<Account>> {
+    const network = params?.network || this.connector.network;
+    const result = await this.callParentFrame("near:signIn", { ...params, network, contractId: params?.contractId || "" });
     if (Array.isArray(result)) return result;
     return [result as Account];
   }
 
   async signOut(data?: { network?: Network }): Promise<void> {
-    await this.callParentFrame("near:signOut", data);
+    const args = { ...data, network: data?.network || this.connector.network };
+    await this.callParentFrame("near:signOut", args);
   }
 
   async getAccounts(data?: { network?: Network }): Promise<Array<Account>> {
-    return this.callParentFrame("near:getAccounts", data) as Promise<Array<Account>>;
+    const args = { ...data, network: data?.network || this.connector.network };
+    return this.callParentFrame("near:getAccounts", args) as Promise<Array<Account>>;
   }
 
   async signAndSendTransaction(params: SignAndSendTransactionParams): Promise<FinalExecutionOutcome> {
-    return this.callParentFrame("near:signAndSendTransaction", params) as Promise<FinalExecutionOutcome>;
+    await this.connector.validateBannedNearAddressInTx(params);
+    const args = { ...params, network: params.network || this.connector.network };
+    return this.callParentFrame("near:signAndSendTransaction", args) as Promise<FinalExecutionOutcome>;
   }
 
   async signAndSendTransactions(params: SignAndSendTransactionsParams): Promise<Array<FinalExecutionOutcome>> {
-    return this.callParentFrame("near:signAndSendTransactions", params) as Promise<Array<FinalExecutionOutcome>>;
+    for (const tx of params.transactions) await this.connector.validateBannedNearAddressInTx(tx);
+    const args = { ...params, network: params.network || this.connector.network };
+    return this.callParentFrame("near:signAndSendTransactions", args) as Promise<Array<FinalExecutionOutcome>>;
   }
 
   async signMessage(params: SignMessageParams): Promise<SignedMessage> {
-    return this.callParentFrame("near:signMessage", params) as Promise<SignedMessage>;
+    const args = { ...params, network: params.network || this.connector.network };
+    return this.callParentFrame("near:signMessage", args) as Promise<SignedMessage>;
   }
 }

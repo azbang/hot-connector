@@ -27,6 +27,10 @@ import { NearConnector } from "@hot-labs/near-connect";
 
 const connector = new NearConnector({
   network: "mainnet",
+
+  // optional: use @aurora-is-near/is-banned-near-address for validate scam accounts
+  isBannedNearAddress: async (address) => false,
+
   // Optional for wallet-connect wallets
   walletConnect: {
     projectId: "",
@@ -78,13 +82,7 @@ The developer writes a self-hosted script that implements the integration of the
 
   "permissions": {
     "storage": true,
-    "allowsOpen": [
-      "https://hot-labs.org",
-      "https://t.me/hot_wallet",
-      "https://play.google.com",
-      "https://apps.apple.com",
-      "hotwallet://"
-    ]
+    "allowsOpen": ["https://hot-labs.org", "https://t.me/hot_wallet", "hotwallet://"]
   }
 }
 ```
