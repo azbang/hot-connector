@@ -26,9 +26,9 @@ export class MultichainPopup extends Popup<{ wallets: Wallet[] }> {
     this.root.querySelectorAll(".connect-item").forEach((item) => {
       if (!(item instanceof HTMLDivElement)) return;
       this.addListener(item, "click", () => {
-        const wallet = this.state.wallets.find((w) => w.id === (item.dataset.id as string));
-        if (wallet) this.delegate.onConnect(item.dataset.id as string);
-        else this.delegate.onDisconnect(item.dataset.id as string);
+        const wallet = this.state.wallets.find((w) => w.id === (item.dataset.wallet as string));
+        if (wallet?.address) this.delegate.onDisconnect(item.dataset.wallet as string);
+        else this.delegate.onConnect(item.dataset.wallet as string);
       });
     });
   }
@@ -48,7 +48,7 @@ export class MultichainPopup extends Popup<{ wallets: Wallet[] }> {
     const address = wallet?.address || "";
     const truncatedAddress = address.length > 16 ? `${address.slice(0, 8)}...${address.slice(-8)}` : address;
 
-    return html`<div class="connect-item" data-id="${wallet.id}">
+    return html`<div class="connect-item" data-wallet="${wallet.id}">
       <img src="${wallet.icon}" alt="${wallet.name}" />
       <div class="connect-item-info">
         <span>${wallet?.name}</span>
