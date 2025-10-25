@@ -134,19 +134,6 @@ const WalletConnect = async () => {
     }));
   };
 
-  const validateAccessKey = (transaction: { receiverId: string; actions: Array<InternalAction> }, accessKey: AccessKeyViewRaw) => {
-    if (accessKey.permission === "FullAccess") return accessKey;
-    const { receiver_id, method_names } = accessKey.permission.FunctionCall;
-    if (transaction.receiverId !== receiver_id) return null;
-
-    return transaction.actions.every((action) => {
-      if (action.type !== "FunctionCall") return false;
-      const { methodName, deposit } = action.params;
-      if (method_names.length && method_names.includes(methodName)) return false;
-      return parseFloat(deposit) <= 0;
-    });
-  };
-
   const requestAccounts = async (network: string) => {
     return window.selector.walletConnect.request({
       topic: (await window.selector.walletConnect.getSession()).topic,
@@ -287,9 +274,11 @@ const WalletConnect = async () => {
       }
     },
 
-    signOut,
+    async signOut({ network }: { network: string }) {
+      await signOut(network);
+    },
 
-    async getAccounts(network: string) {
+    async getAccounts({ network }: { network: string }) {
       return getAccounts(network);
     },
 
