@@ -4,6 +4,8 @@ import { OmniConnector } from "../OmniConnector";
 import { WalletType } from "../OmniWallet";
 import EvmAccount from "./wallet";
 
+import "./injectedHot";
+
 class EvmConnector extends OmniConnector<EvmAccount> {
   appKit: AppKit;
 
