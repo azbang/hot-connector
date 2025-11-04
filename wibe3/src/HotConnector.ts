@@ -3,33 +3,33 @@ import { AppKit } from "@reown/appkit";
 import { MultichainPopup } from "./popups/MultichainPopup";
 import { EventEmitter } from "./events";
 
-import { OmniWallet } from "./OmniWallet";
+import { OmniWallet, WalletType } from "./OmniWallet";
 import { OmniConnector } from "./OmniConnector";
 
 import PasskeyConnector from "./passkey/connector";
 import NearConnector from "./near/connector";
-import EvmConnector from "./evm/connector";
+import EvmConnector, { EvmConnectorOptions } from "./evm/connector";
 import SolanaConnector from "./solana/connector";
 import StellarConnector from "./stellar/connector";
 import TonConnector from "./ton/connector";
 
 export const near = () => new NearConnector();
-export const evm = (appKit: AppKit) => new EvmConnector(appKit);
+export const evm = (options?: EvmConnectorOptions) => new EvmConnector(options);
 export const solana = (appKit: AppKit) => new SolanaConnector(appKit);
 export const stellar = () => new StellarConnector();
 export const ton = () => new TonConnector();
 export const passkey = () => new PasskeyConnector();
 
 export class HotConnector {
-  private connectors: OmniConnector[] = [];
+  public connectors: OmniConnector[] = [];
   private events = new EventEmitter<{
     connect: { wallet: OmniWallet };
     disconnect: { wallet: OmniWallet };
   }>();
 
-  constructor(options?: { connectors?: OmniConnector[]; appKit: AppKit }) {
-    if (options?.connectors == null && options?.appKit == null) throw new Error("You should configure connectors or appKit fields");
-    this.connectors = options?.connectors || [near(), evm(options.appKit), solana(options.appKit), stellar(), ton(), passkey()];
+  constructor(options?: { connectors?: OmniConnector[]; appKit?: AppKit } & EvmConnectorOptions) {
+    this.connectors =
+      options?.connectors || [near(), evm(options), options?.appKit ? solana(options.appKit) : null, stellar(), ton(), passkey()].filter((t) => t != null);
 
     this.connectors.forEach((t) => {
       t.onConnect((payload) => this.events.emit("connect", payload));
@@ -63,8 +63,8 @@ export class HotConnector {
     return () => this.events.off("disconnect", handler);
   }
 
-  async connect(type?: string) {
-    if (type) return this.connectors.find((t) => t.id === type)?.connect();
+  async connect(type?: WalletType | string) {
+    if (type) return this.connectors.find((t) => t.type === type || t.id === type)?.connect();
 
     return new Promise<void>(async (resolve, reject) => {
       const popup = new MultichainPopup({

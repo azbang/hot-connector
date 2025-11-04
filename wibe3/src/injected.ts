@@ -27,28 +27,29 @@ const uuid4 = () => {
   }
 };
 
+const requestHot = (method: string, request: any) => {
+  const id = uuid4();
+  return new Promise<any>((resolve, reject) => {
+    const handler = (e: any) => {
+      if (e.data.id !== id) return;
+      window?.removeEventListener("message", handler);
+      return e.data.success ? resolve(e.data.payload) : reject(e.data.payload);
+    };
+
+    window?.parent.postMessage({ $hot: true, method, request, id }, "*");
+    window?.addEventListener("message", handler);
+  });
+};
+
 class HotEvmProvider {
   _events = new Map<string, Set<any>>();
   isConnected = () => true;
   isHotWallet = true;
   isMetaMask = true;
 
+  request = (request: any) => requestHot("ethereum", request);
   removeListener() {}
   on() {}
-
-  request = async (request: any): Promise<any> => {
-    const id = uuid4();
-    return new Promise<any>((resolve, reject) => {
-      const handler = (e: any) => {
-        if (e.data.id !== id) return;
-        window?.removeEventListener("message", handler);
-        return e.data.success ? resolve(e.data.payload) : reject(e.data.payload);
-      };
-
-      window?.parent.postMessage({ $hot: true, method: "ethereum", request, id }, "*");
-      window?.addEventListener("message", handler);
-    });
-  };
 }
 
 if (isInjected()) {
@@ -73,4 +74,57 @@ if (isInjected()) {
 
   window.addEventListener("eip6963:requestProvider", () => announceProvider());
   announceProvider();
+
+  // @ts-ignore
+  window.hotWallet = {
+    tonconnect: {
+      deviceInfo: {
+        appName: "hot",
+        appVersion: "1",
+        maxProtocolVersion: 2,
+        platform: "ios",
+        features: [
+          "SendTransaction",
+          {
+            name: "SendTransaction",
+            maxMessages: 255,
+            extraCurrencySupported: false,
+          },
+          {
+            name: "SignData",
+            types: ["text", "binary", "cell"],
+          },
+        ],
+      },
+
+      walletInfo: {
+        name: "hotWallet",
+        image: "https://storage.herewallet.app/logo.png",
+        about_url: "https://hot-labs.org",
+      },
+
+      protocolVersion: 2,
+      isWalletBrowser: true,
+
+      connect: (_: number, request: any) => {
+        return requestHot("ton:connect", request);
+      },
+
+      restoreConnection: () => {
+        return requestHot("ton:restoreConnection", {});
+      },
+
+      disconnect: () => {
+        return requestHot("ton:disconnect", {});
+      },
+
+      send: async (request: any) => {
+        return requestHot("ton:send", request);
+      },
+
+      listen: () => {
+        return function () {};
+      },
+    },
+  };
 }

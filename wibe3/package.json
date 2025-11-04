@@ -1,6 +1,6 @@
 {
   "name": "@hot-labs/wibe3",
-  "version": "0.3.7",
+  "version": "0.4.3",
   "description": "Wibe3 is web3 sdk for vibe coders",
   "license": "ISC",
   "author": "",
@@ -24,10 +24,10 @@
     "@peculiar/asn1-ecc": "^2.5.0",
     "@peculiar/asn1-schema": "^2.5.0",
     "@reown/appkit": "^1.8.11",
-    "@reown/appkit-adapter-ethers": "^1.8.11",
     "@reown/appkit-adapter-solana": "^1.8.11",
     "@scure/base": "^2.0.0",
     "@tonconnect/ui": "^2.2.0",
+    "@walletconnect/universal-provider": "^2.23.0",
     "ethers": "^6.15.0",
     "react": "^19.2.0",
     "tweetnacl": "^1.0.3"

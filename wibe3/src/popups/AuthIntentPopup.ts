@@ -1,9 +1,11 @@
+import { WalletType } from "../OmniWallet";
 import { html } from "./html";
 import { Popup } from "./Popup";
 
-export class AuthPopup extends Popup<{ loading: boolean }> {
-  constructor(readonly delegate: { onApprove: () => Promise<void>; onReject: () => void }) {
+export class AuthPopup extends Popup<{ loading: boolean; type: WalletType }> {
+  constructor(readonly delegate: { type: WalletType; onApprove: () => Promise<void>; onReject: () => void }) {
     super(delegate);
+    this.update({ type: delegate.type });
   }
 
   create() {
@@ -43,11 +45,21 @@ export class AuthPopup extends Popup<{ loading: boolean }> {
     </svg>`;
   }
 
+  get chainName() {
+    if (this.state.type === WalletType.EVM) return "EVM";
+    if (this.state.type === WalletType.SOLANA) return "Solana";
+    if (this.state.type === WalletType.TON) return "TON";
+    if (this.state.type === WalletType.STELLAR) return "Stellar";
+    if (this.state.type === WalletType.NEAR) return "NEAR";
+    if (this.state.type === WalletType.PASSKEY) return "Passkey";
+    return "";
+  }
+
   get dom() {
     return html`<div class="modal-container">
       <div class="modal-content">
         <div class="modal-header">
-          <p>Authorization</p>
+          <p>Authorize ${this.chainName} wallet</p>
         </div>
 
         <div class="modal-body">

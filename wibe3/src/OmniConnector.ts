@@ -46,6 +46,7 @@ export abstract class OmniConnector<T extends OmniWallet = OmniWallet> {
     if (silent) return this.silentDisconnect();
     return new Promise<void>((resolve, reject) => {
       const popup = new LogoutPopup({
+        type: this.type,
         onApprove: async () => {
           await this.silentDisconnect();
           this.removeWallet();

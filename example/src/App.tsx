@@ -1,6 +1,6 @@
 import { FC, useState } from "react";
 
-import { HotConnector, Intents, WalletType } from "@hot-labs/wibe3";
+import { HotConnector, Intents, WalletType } from "../../wibe3/src";
 import { NearConnector, NearWalletBase } from "../../near-connect/src";
 
 import { NetworkSelector } from "./form-component/NetworkSelector.tsx";
@@ -89,7 +89,16 @@ export const MultichainExample = () => {
   });
 
   const [connector] = useState<HotConnector>(() => {
-    const connector = new HotConnector();
+    const connector = new HotConnector({
+      projectId: "1292473190ce7eb75c9de67e15aaad99",
+      metadata: {
+        name: "Example App",
+        description: "Example App",
+        url: window.location.origin,
+        icons: ["/favicon.ico"],
+      },
+    });
+
     connector.onConnect(async ({ wallet }) => {
       if (!wallet) return;
       const address = await wallet.getAddress();

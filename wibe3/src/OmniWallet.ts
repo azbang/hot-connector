@@ -64,6 +64,7 @@ export abstract class OmniWallet {
   async auth<T = SignedAuth>(domain: string, intents?: Record<string, any>[], then?: (signed: SignedAuth) => Promise<T>): Promise<T> {
     return new Promise<T>((resolve, reject) => {
       const popup = new AuthPopup({
+        type: this.type,
         onApprove: async () => {
           try {
             const signed = await this.signIntentsWithAuth(domain, intents);

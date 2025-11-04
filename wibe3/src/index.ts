@@ -21,3 +21,5 @@ export * from "./types";
 
 export { near, evm, solana, stellar, ton, passkey } from "./HotConnector";
 export { useWibe3 } from "./useWibe3";
+
+import "./injected";

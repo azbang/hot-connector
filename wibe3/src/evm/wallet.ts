@@ -1,11 +1,11 @@
-import type { Provider as EvmProvider } from "@reown/appkit-utils/ethers";
+import UniversalProvider from "@walletconnect/universal-provider";
 import { base64, base58, hex } from "@scure/base";
 
 import { OmniWallet, WalletType } from "../OmniWallet";
 import EvmConnector from "./connector";
 
 class EvmWallet extends OmniWallet {
-  constructor(readonly connector: EvmConnector, readonly wallet: EvmProvider) {
+  constructor(readonly connector: EvmConnector, readonly provider: UniversalProvider) {
     super(connector);
   }
 
@@ -13,8 +13,13 @@ class EvmWallet extends OmniWallet {
     return WalletType.EVM;
   }
 
+  async disconnect({ silent = false }: { silent?: boolean } = {}) {
+    super.disconnect({ silent });
+    this.provider.request({ method: "wallet_revokePermissions" });
+  }
+
   getAddress = async (): Promise<string> => {
-    const addresses = (await this.wallet.request({ method: "eth_requestAccounts" })) as string[];
+    const addresses = (await this.provider.request({ method: "eth_requestAccounts" })) as string[];
     if (!addresses || addresses.length === 0) throw new Error("No account found");
     return addresses[0].toLowerCase();
   };
@@ -45,7 +50,7 @@ class EvmWallet extends OmniWallet {
 
   async signMessage(msg: string) {
     const address = await this.getAddress();
-    const result: string = await this.wallet.request({ method: "personal_sign", params: [msg, address] });
+    const result: string = await this.provider.request({ method: "personal_sign", params: [msg, address] });
 
     const yInt = parseInt(result.slice(-2), 16);
     const isZero = yInt === 27 || yInt === 0;
@@ -53,7 +58,7 @@ class EvmWallet extends OmniWallet {
   }
 
   async sendTransaction(tx: string) {
-    return await this.wallet.request({ method: "eth_sendTransaction", params: [tx] });
+    return await this.provider.request({ method: "eth_sendTransaction", params: [tx] });
   }
 
   async signIntents(intents: Record<string, any>[], options?: { deadline?: number; nonce?: Uint8Array }): Promise<Record<string, any>> {

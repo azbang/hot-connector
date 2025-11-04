@@ -227,7 +227,6 @@ ${id} .connect-item-info {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 4px;
   text-align: left;
   flex: 1;
   margin-top: -2px;
@@ -261,5 +260,41 @@ ${id} .connect-item p {
   line-height: normal;
   letter-spacing: -0.36px;
   margin: 0;
+}
+
+${id} .qr-code {
+  background: url("https://app.hot-labs.org/assets/QR.svg") center center / cover no-repeat;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+  width: 400px;
+  height: 400px;
+  flex-shrink: 0;
+
+  canvas {
+    transform: translate(1px, 22px);
+  }
+}
+
+${id} .copy-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: background 0.2s ease-in-out;
+  background: #282c30;
+  padding: 4px 8px;
+  border-radius: 16px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  margin: auto;
+  margin-top: -18px;
+}
+
+${id} .copy-button:hover {
+  background: #383c40;
 }
 `;
