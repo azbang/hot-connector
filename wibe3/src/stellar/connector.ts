@@ -1,8 +1,9 @@
 import { allowAllModules, ISupportedWallet, StellarWalletsKit, WalletNetwork } from "@creit.tech/stellar-wallets-kit";
-import { LocalStorage } from "../storage";
 
+import { LocalStorage } from "../storage";
 import { WalletType } from "../OmniWallet";
 import { OmniConnector } from "../OmniConnector";
+import { isInjected } from "../injected/hot";
 import StellarWallet from "./wallet";
 
 class StellarConnector extends OmniConnector<StellarWallet> {
@@ -20,7 +21,7 @@ class StellarConnector extends OmniConnector<StellarWallet> {
 
     this.stellarKit = stellarKit || new StellarWalletsKit({ network: WalletNetwork.PUBLIC, modules: allowAllModules() });
 
-    this.storage.get("hot-connector:stellar").then((data) => {
+    this.getConnectedWallet().then((data) => {
       try {
         if (!data || !this.stellarKit) throw "No wallet";
         const { id, address } = JSON.parse(data);
@@ -30,6 +31,16 @@ class StellarConnector extends OmniConnector<StellarWallet> {
         this.removeWallet();
       }
     });
+  }
+
+  async getConnectedWallet() {
+    if (isInjected()) {
+      this.stellarKit.setWallet("hot-wallet");
+      const { address } = await this.stellarKit?.getAddress();
+      return JSON.stringify({ id: "hot-wallet", address });
+    }
+
+    return await this.storage.get("hot-connector:stellar");
   }
 
   async connect() {

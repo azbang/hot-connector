@@ -1,11 +1,12 @@
 import UniversalProvider from "@walletconnect/universal-provider";
+
+import { isInjected } from "../injected/hot";
+import { WalletConnectPopup } from "../popups/WalletConnectPopup";
+import { WalletsPopup } from "../popups/WalletsPopup";
 import { OmniConnector } from "../OmniConnector";
 import { WalletType } from "../OmniWallet";
-import EvmAccount from "./wallet";
-
-import { WalletsPopup } from "../popups/WalletsPopup";
 import { LocalStorage } from "../storage";
-import { WalletConnectPopup } from "../popups/WalletConnectPopup";
+import EvmAccount from "./wallet";
 
 export interface EvmConnectorOptions {
   projectId?: string;
@@ -56,7 +57,7 @@ class EvmConnector extends OmniConnector<EvmAccount> {
           this._walletconnectPopup?.update({ uri });
         });
 
-        const connected = await this.storage.get("evm:connected");
+        const connected = await this.getConnectedWallet();
         if (connected === "walletconnect") {
           const address = provider.session?.namespaces.eip155?.accounts?.[0]?.split(":")[2];
           if (address) this.setWallet(new EvmAccount(this, provider));
@@ -72,18 +73,24 @@ class EvmConnector extends OmniConnector<EvmAccount> {
 
       this._popup?.update({ wallets: this.wallets.map((t) => t.info) });
 
-      const connected = await this.storage.get("evm:connected");
-      if (connected === provider.detail.info.uuid) {
+      const connected = await this.getConnectedWallet();
+      if (connected === provider.detail.info.rdns) {
         try {
           await provider.detail.provider.request({ method: "wallet_requestPermissions" });
           this.setWallet(new EvmAccount(this, provider.detail.provider));
-        } catch {
+        } catch (e) {
+          console.log("error", e);
           this.storage.remove("evm:connected");
         }
       }
     });
 
     window.dispatchEvent(new Event("eip6963:requestProvider"));
+  }
+
+  async getConnectedWallet() {
+    if (isInjected()) return "org.hot-labs";
+    return await this.storage.get("evm:connected");
   }
 
   _walletconnectPopup: WalletConnectPopup | null = null;

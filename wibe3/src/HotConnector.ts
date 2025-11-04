@@ -1,5 +1,3 @@
-import { AppKit } from "@reown/appkit";
-
 import { MultichainPopup } from "./popups/MultichainPopup";
 import { EventEmitter } from "./events";
 
@@ -9,13 +7,13 @@ import { OmniConnector } from "./OmniConnector";
 import PasskeyConnector from "./passkey/connector";
 import NearConnector from "./near/connector";
 import EvmConnector, { EvmConnectorOptions } from "./evm/connector";
-import SolanaConnector from "./solana/connector";
+import SolanaConnector, { SolanaConnectorOptions } from "./solana/connector";
 import StellarConnector from "./stellar/connector";
 import TonConnector from "./ton/connector";
 
 export const near = () => new NearConnector();
 export const evm = (options?: EvmConnectorOptions) => new EvmConnector(options);
-export const solana = (appKit: AppKit) => new SolanaConnector(appKit);
+export const solana = (options?: SolanaConnectorOptions) => new SolanaConnector(options);
 export const stellar = () => new StellarConnector();
 export const ton = () => new TonConnector();
 export const passkey = () => new PasskeyConnector();
@@ -27,9 +25,8 @@ export class HotConnector {
     disconnect: { wallet: OmniWallet };
   }>();
 
-  constructor(options?: { connectors?: OmniConnector[]; appKit?: AppKit } & EvmConnectorOptions) {
-    this.connectors =
-      options?.connectors || [near(), evm(options), options?.appKit ? solana(options.appKit) : null, stellar(), ton(), passkey()].filter((t) => t != null);
+  constructor(options?: { connectors?: OmniConnector[] } & EvmConnectorOptions & SolanaConnectorOptions) {
+    this.connectors = options?.connectors || [near(), evm(options), solana(options), stellar(), ton(), passkey()].filter((t) => t != null);
 
     this.connectors.forEach((t) => {
       t.onConnect((payload) => this.events.emit("connect", payload));

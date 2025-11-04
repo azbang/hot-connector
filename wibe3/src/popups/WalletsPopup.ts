@@ -14,7 +14,7 @@ export class WalletsPopup extends Popup<{ uri?: string; wallets: Wallet[] }> {
     readonly delegate: {
       wallets: Wallet[];
       uri?: string;
-      onWalletConnect: () => void;
+      onWalletConnect?: () => void;
       onConnect: (id: string) => void;
       onReject: () => void;
     }
@@ -33,7 +33,7 @@ export class WalletsPopup extends Popup<{ uri?: string; wallets: Wallet[] }> {
       if (!(item instanceof HTMLDivElement)) return;
       this.addListener(item, "click", () => {
         if (item.dataset.wallet === "walletconnect") {
-          this.delegate.onWalletConnect();
+          this.delegate.onWalletConnect?.();
         } else {
           this.delegate.onConnect(item.dataset.wallet as string);
         }
@@ -55,14 +55,17 @@ export class WalletsPopup extends Popup<{ uri?: string; wallets: Wallet[] }> {
     return html`<div class="modal-container">
       <div class="modal-content">
         <div class="modal-body">
-          <div class="connect-item" data-wallet="walletconnect">
-            <img src="https://storage.herewallet.app/upload/2470b14a81fcf84e7cb53230311a7289b96a49ab880c7fa7a22765d7cdeb1271.svg" alt="walletconnect" />
-            <div class="connect-item-info">
-              <span>WalletConnect</span>
-              <span class="wallet-address">Connect via QR</span>
+          ${this.delegate.onWalletConnect &&
+          html`
+            <div class="connect-item" data-wallet="walletconnect">
+              <img src="https://storage.herewallet.app/upload/2470b14a81fcf84e7cb53230311a7289b96a49ab880c7fa7a22765d7cdeb1271.svg" alt="walletconnect" />
+              <div class="connect-item-info">
+                <span>WalletConnect</span>
+                <span class="wallet-address">Connect via QR</span>
+              </div>
             </div>
-          </div>
-          <div style="width: 100%; height: 1px; background: rgba(255, 255, 255, 0.1); flex-shrink: 0;"></div>
+            <div style="width: 100%; height: 1px; background: rgba(255, 255, 255, 0.1); flex-shrink: 0;"></div>
+          `}
           ${this.state.wallets.map((wallet) => this.walletOption(wallet))}
         </div>
 

@@ -1,7 +1,8 @@
 import { TonConnect, TonConnectUI } from "@tonconnect/ui";
-import TonWallet from "./wallet";
-import { WalletType } from "../OmniWallet";
 import { OmniConnector } from "../OmniConnector";
+import { WalletType } from "../OmniWallet";
+import { isInjected } from "../injected/hot";
+import TonWallet from "./wallet";
 
 class TonConnector extends OmniConnector<TonWallet> {
   private tonConnect!: TonConnectUI;
@@ -32,6 +33,13 @@ class TonConnector extends OmniConnector<TonWallet> {
 
       this.tonConnect.setConnectRequestParameters({ state: "ready", value: { tonProof: "hot-connector" } });
       this.tonConnect.connector.restoreConnection();
+
+      if (isInjected()) {
+        this.tonConnect.connector.getWallets().then((wallets) => {
+          const wallet = wallets.find((w) => w.appName === "hot");
+          if (wallet) this.tonConnect.connector.connect(wallet, { tonProof: "hot-connector" });
+        });
+      }
     }
   }
 
