@@ -31,14 +31,11 @@ class EvmConnector extends OmniConnector<EvmAccount> {
   id = "evm";
 
   chains = [1, 10, 56, 137, 8453, 42161, 421613, 80001];
-  provider?: Promise<UniversalProvider>;
-
-  wallets: {
-    provider: any;
-    info: { name: string; uuid: string; rdns: string; icon: string };
-  }[] = [];
+  wallets: { provider: any; info: { name: string; uuid: string; rdns: string; icon: string } }[] = [];
 
   _popup: WalletsPopup | null = null;
+  _walletconnectPopup: WalletConnectPopup | null = null;
+  provider?: Promise<UniversalProvider>;
 
   constructor(options: EvmConnectorOptions = {}) {
     super();
@@ -93,11 +90,10 @@ class EvmConnector extends OmniConnector<EvmAccount> {
     return await this.storage.get("evm:connected");
   }
 
-  _walletconnectPopup: WalletConnectPopup | null = null;
   async connectWalletConnect() {
     return new Promise<void>(async (resolve, reject) => {
       this._walletconnectPopup = new WalletConnectPopup({
-        uri: "x",
+        uri: "LOADING",
         onReject: async () => {
           const provider = await this.provider;
           provider?.cleanupPendingPairings();
@@ -165,7 +161,7 @@ class EvmConnector extends OmniConnector<EvmAccount> {
 
           try {
             await wallet.provider.request({ method: "wallet_requestPermissions" });
-            this.storage.set("evm:connected", id);
+            this.storage.set("evm:connected", wallet.info.rdns);
             this.setWallet(new EvmAccount(this, wallet.provider));
             this._popup?.destroy();
             this._popup = null;
