@@ -74,7 +74,6 @@ const connect = async (network: string) => {
     modal = new WalletConnectModal({
       chains: [`near:mainnet`, `near:testnet`],
       projectId: await window.selector.walletConnect.getProjectId(),
-      explorerExcludedWalletIds: "ALL",
       themeMode: "dark",
     });
   }
