@@ -2,79 +2,52 @@
 
 `yarn add @hot-labs/wibe3`
 
-## Client side
+Multi-chain connector for NEAR Intents support.
+Implements NEAR Intents support for the following networks:
 
-```tsx
-import { Wibe3Client, useWibe3 } from "@hot-labs/wibe3/client";
+- NEAR
+- EVM
+- Solana
+- TON
+- Stellar
 
-const wibe3 = new Wibe3Client();
-
-const Wibe3App = () => {
-  const { address, connect, auth } = useWibe3(wibe3);
-  const [jwt, setJwt] = useState<string | null>(null);
-
-  const authUser = async () => {
-    const auth = await wibe3.auth();
-    const jwt = await fetch("/auth", { body: JSON.stringify(auth), method: "POST" }).then((r) => r.json());
-    setJwt(jwt);
-  };
-
-  const claim = async () => {
-    const password = prompt("Enter password to get 10 USDT");
-    await fetch("/claim", {
-      body: JSON.stringify({ password }),
-      headers: { Authorization: jwt },
-      method: "POST",
-    });
-  };
-
-  if (!address) {
-    return (
-      <div>
-        <button onClick={() => connect()}>Connect</button>
-      </div>
-    );
-  }
-
-  if (!jwt) {
-    return (
-      <div>
-        <p>Address: {address}</p>
-        <button onClick={() => authUser()}>Auth</button>
-      </div>
-    );
-  }
-
-  return (
-    <div>
-      <p>Address: {address}</p>
-      <button onClick={() => claim()}>Claim 10$</button>
-    </div>
-  );
-};
-```
-
-## Backend side
+Also supported: Passkey accounts and Google Auth via HOT MPC Network
 
 ```ts
-import { Wibe3Wallet, OmniToken } from "@hot-labs/wibe3";
-
-const wibe3 = new Wibe3Wallet({
-  privateKey: "", // from HOT Wallet
+const connector = new HotConnector({
+  enableGoogle: true,
+  projectId: "1292473190ce7eb75c9de67e15aaad99",
+  metadata: {
+    name: "Example App",
+    description: "Example App",
+    url: window.location.origin,
+    icons: ["/favicon.ico"],
+  },
 });
 
-server.post("/auth", async (res) => {
-  if (!(await wibe3.validateAuth(res.body))) return res.send(401);
-  const jwt = createUserAndGenerateJwt(res.body);
-  return res.send(200, jwt);
+connector.onConnect(async ({ wallet }) => {
+  const address = await wallet.getAddress();
+
+  // Easy to interact with NEAR Intents on any wallet
+  const intentAddress = await wallet.getIntentsAddress();
+  const signed = await wallet.signIntents([{ intent: "token_diff", ... }])
+  await Intents.publishSignedIntents([signed]);
 });
 
-server.post("/claim", async (res) => {
-  if (res.body.password !== "halyava") return res.send(401);
-  const user = getUserFromJwt(res.headers.Authorization);
-  const paymentId = `${user.tradingAddress}-giveaway1`;
+connector.onDisconnect(({ wallet }) => {});
 
-  // paymentId garantee that this user claim price only once!
-  await wibe3.transfer({ token: OmniToken.USDT, amount: 10, to: user.tradingAddress, paymentId });
-});
+```
+
+## TODO: simple api to interact with omni assets
+
+```ts
+// Open deposit flow from wallet to NEAR Intents
+await wallet.depositToken(OmniToken.USDT, 10);
+
+// Abstract API to transfer OMNI Tokens
+const receiver = await IntentAccount(Network.TON, "EQ...");
+await wallet.transferToken(OmniToken.USDT, 2, receiver);
+
+// Withdraw to wallet!
+await wallet.withdrawToken(OmniToken.USDT, 2);
 ```
