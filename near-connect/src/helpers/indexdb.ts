@@ -11,6 +11,11 @@ export default class IndexedDB {
 
   getDb(): Promise<IDBDatabase> {
     return new Promise((resolve, reject) => {
+      if (typeof window === "undefined" || typeof indexedDB === "undefined") {
+        reject(new Error("IndexedDB is not available (SSR environment)"));
+        return;
+      }
+
       const request = indexedDB.open(this.dbName, this.version);
 
       request.onerror = (event: any) => {
