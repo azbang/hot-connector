@@ -1,7 +1,7 @@
 import { FC, useState } from "react";
 
-import { HotConnector, Intents, WalletType } from "../../wibe3/src";
-import { NearConnector, NearWalletBase } from "../../near-connect/src";
+import { HotConnector, Intents, WalletType } from "@hot-labs/wibe3";
+import { NearConnector, NearWalletBase } from "@hot-labs/near-connect";
 
 import { NetworkSelector } from "./form-component/NetworkSelector.tsx";
 import { WalletActions } from "./WalletActions.tsx";

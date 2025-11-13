@@ -1,3 +1,8 @@
+# 0.6.9
+
+- Fix SSR issues
+- Move styles to isolated className
+
 # 0.6.8
 
 - Add fallback for manifest

@@ -1,6 +1,6 @@
-import { NearWallet } from "../../../near-connect/src";
+import { NearWalletBase } from "@hot-labs/near-connect";
 
 export interface IPropsWalletAction {
   network: "testnet" | "mainnet";
-  wallet: NearWallet;
+  wallet: NearWalletBase;
 }

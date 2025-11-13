@@ -1,8 +1,9 @@
 import { useLocalStorage } from "usehooks-ts";
-import { IPropsWalletAction } from "./wallet-action.types.ts";
-import { FinalExecutionOutcome } from "@near-wallet-selector/core";
-import { FinalOutcome } from "./FinalOutcome.tsx";
+import { FinalExecutionOutcome } from "@near-js/types";
 import { parseNearAmount } from "@near-js/utils";
+
+import { IPropsWalletAction } from "./wallet-action.types.ts";
+import { FinalOutcome } from "./FinalOutcome.tsx";
 
 export const SendTx = ({ wallet, network }: IPropsWalletAction) => {
   const [amount, setAmount] = useLocalStorage(`send-tx-${network}-amount`, "0.01");

@@ -1,4 +1,4 @@
-import { FinalExecutionOutcome } from "@near-wallet-selector/core";
+import { FinalExecutionOutcome } from "@near-js/types";
 
 interface IPropsFinalOutcome {
   outcome: FinalExecutionOutcome;
@@ -15,9 +15,7 @@ export const FinalOutcome = ({ outcome, network }: IPropsFinalOutcome) => {
           <a
             target={"_blank"}
             className={"break-all text-xs text-sky-500"}
-            href={`https://${network === "testnet" ? "testnet." : ""}nearblocks.io/txns/${
-              outcome.transaction_outcome.id
-            }`}
+            href={`https://${network === "testnet" ? "testnet." : ""}nearblocks.io/txns/${outcome.transaction_outcome.id}`}
           >
             {outcome.transaction_outcome.id}
           </a>
