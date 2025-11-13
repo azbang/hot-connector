@@ -98,7 +98,7 @@ class HOT {
     const requestId = await this.createRequest({ method, request });
     const link = `hotcall-${requestId}`;
     const qrcode = new QRCode({
-      value: `https://t.me/hot_wallet/app?startapp=${link}`,
+      value: `https://app.hot-labs.org/link?${link}`,
       logo: logoImage,
       size: 140,
       radius: 0.8,
