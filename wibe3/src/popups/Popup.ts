@@ -1,7 +1,7 @@
 import { css } from "./styles";
 import { html } from "./html";
 
-const ID = "hot-connector-popup";
+const ID = Math.random().toString(36).substring(2, 15);
 
 if (typeof document !== "undefined") {
   const style = document.createElement("style");
@@ -55,7 +55,7 @@ export class Popup<T extends Record<string, any>> {
   }
 
   create({ show = true }: { show?: boolean }) {
-    this.root.className = ID;
+    this.root.className = `${ID} wibe3-popup`;
     this.root.innerHTML = this.dom.html;
     document.body.append(this.root);
     this.handlers();

@@ -106,7 +106,7 @@ ${id} .modal-body {
   flex-direction: column;
   align-items: flex-start;
   text-align: center;
-  gap: 8px;
+  gap: 4px;
   overflow: auto;
 
   border-radius: 24px;
@@ -216,8 +216,8 @@ ${id} .connect-item {
 }
 
 ${id} .connect-item img {
-  width: 48px;
-  height: 48px;
+  width: 44px;
+  height: 44px;
   border-radius: 16px;
   object-fit: cover;
   flex-shrink: 0;
@@ -244,12 +244,6 @@ ${id} .connect-item:hover {
   background: rgba(255, 255, 255, 0.04);
 }
 
-${id} .connect-item img {
-  width: 48px;
-  height: 48px;
-  border-radius: 16px;
-  object-fit: cover;
-}
 
 ${id} .connect-item p {
   color: rgba(255, 255, 255, 0.9);

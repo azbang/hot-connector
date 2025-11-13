@@ -1,6 +1,6 @@
-import QRCode, { darkQR } from "../qrcode";
 import { html } from "./html";
 import { Popup } from "./Popup";
+import { WalletType } from "../OmniWallet";
 
 interface Wallet {
   name: string;
@@ -9,18 +9,29 @@ interface Wallet {
   icon: string;
 }
 
-export class WalletsPopup extends Popup<{ uri?: string; wallets: Wallet[] }> {
+export class WalletsPopup extends Popup<{ type: WalletType; uri?: string; wallets: Wallet[] }> {
   constructor(
     readonly delegate: {
       wallets: Wallet[];
       uri?: string;
+      type: WalletType;
       onWalletConnect?: () => void;
       onConnect: (id: string) => void;
       onReject: () => void;
     }
   ) {
     super(delegate);
-    this.update({ wallets: delegate.wallets });
+    this.update({ type: delegate.type, wallets: delegate.wallets });
+  }
+
+  get chainName() {
+    if (this.state.type === WalletType.EVM) return "EVM";
+    if (this.state.type === WalletType.SOLANA) return "Solana";
+    if (this.state.type === WalletType.TON) return "TON";
+    if (this.state.type === WalletType.STELLAR) return "Stellar";
+    if (this.state.type === WalletType.NEAR) return "NEAR";
+    if (this.state.type === WalletType.PASSKEY) return "Passkey";
+    return "";
   }
 
   create() {
@@ -54,6 +65,9 @@ export class WalletsPopup extends Popup<{ uri?: string; wallets: Wallet[] }> {
   get dom() {
     return html`<div class="modal-container">
       <div class="modal-content">
+        <div class="modal-header">
+          <p>Select ${this.chainName} wallet</p>
+        </div>
         <div class="modal-body">
           ${this.delegate.onWalletConnect &&
           html`

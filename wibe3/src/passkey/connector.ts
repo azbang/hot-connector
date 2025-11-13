@@ -19,7 +19,7 @@ class PasskeyConnector extends OmniConnector<PasskeyWallet> {
   constructor() {
     super();
 
-    this.storage.get("passkey-wallet").then((data) => {
+    this.storage.get("passkey:connected").then((data) => {
       if (data) this.setWallet(new PasskeyWallet(this, JSON.parse(data)));
     });
   }
@@ -39,7 +39,7 @@ class PasskeyConnector extends OmniConnector<PasskeyWallet> {
       if (!response.ok) throw new Error("Failed to create new passkey");
     });
 
-    this.storage.set("passkey-wallet", JSON.stringify(credential));
+    this.storage.set("passkey:connected", JSON.stringify(credential));
     const wallet = new PasskeyWallet(this, credential);
     this.setWallet(wallet);
     return wallet;
@@ -54,7 +54,7 @@ class PasskeyConnector extends OmniConnector<PasskeyWallet> {
       if (!response.ok) throw new Error("Failed to get passkey public key");
 
       const { public_key } = await response.json();
-      this.storage.set("passkey-wallet", JSON.stringify({ public_key: public_key, raw_id: rawId }));
+      this.storage.set("passkey:connected", JSON.stringify({ public_key: public_key, raw_id: rawId }));
       const wallet = new PasskeyWallet(this, { publicKey: public_key, rawId });
       this.setWallet(wallet);
       return wallet;
@@ -94,7 +94,7 @@ class PasskeyConnector extends OmniConnector<PasskeyWallet> {
   }
 
   async silentDisconnect() {
-    this.storage.remove("passkey-wallet");
+    this.storage.remove("passkey:connected");
   }
 
   async retryOperation<T>(operation: () => Promise<T>, maxRetries = 10, delay = 1000): Promise<T> {

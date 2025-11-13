@@ -1,6 +1,6 @@
 {
   "name": "@hot-labs/wibe3",
-  "version": "0.4.7",
+  "version": "0.4.8",
   "description": "Wibe3 is web3 sdk for vibe coders",
   "license": "ISC",
   "author": "",
@@ -21,6 +21,7 @@
     "@creit.tech/stellar-wallets-kit": "^1.9.1",
     "@hot-labs/near-connect": "^0.6.7",
     "@near-js/crypto": "^2.3.3",
+    "@near-js/providers": "^2.5.1",
     "@near-js/utils": "^2.2.4",
     "@noble/hashes": "^2.0.1",
     "@peculiar/asn1-ecc": "^2.5.0",

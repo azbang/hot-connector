@@ -12,6 +12,7 @@ export class MultichainPopup extends Popup<{ wallets: Wallet[] }> {
   constructor(
     readonly delegate: {
       wallets: Wallet[];
+      onGoogleConnect?: () => void;
       onDisconnect: (id: string) => void;
       onConnect: (id: string) => void;
       onReject: () => void;
@@ -23,6 +24,9 @@ export class MultichainPopup extends Popup<{ wallets: Wallet[] }> {
 
   create() {
     super.create({ show: true });
+
+    this.addListener(".google-connect", "click", () => this.delegate.onGoogleConnect?.());
+
     this.root.querySelectorAll(".connect-item").forEach((item) => {
       if (!(item instanceof HTMLDivElement)) return;
       this.addListener(item, "click", () => {
@@ -65,7 +69,15 @@ export class MultichainPopup extends Popup<{ wallets: Wallet[] }> {
           <p>Select network</p>
         </div>
 
-        <div class="modal-body">${this.state.wallets.map((wallet) => this.walletOption(wallet))}</div>
+        <div class="modal-body">
+          ${this.state.wallets.map((wallet) => this.walletOption(wallet))}
+          ${this.delegate.onGoogleConnect != null &&
+          html`
+            <div>
+              <button class="google-connect">Connect with Google</button>
+            </div>
+          `}
+        </div>
 
         <div class="footer">
           <img src="https://tgapp.herewallet.app/images/hot/hot-icon.png" alt="HOT Connector" />

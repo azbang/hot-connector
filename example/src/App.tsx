@@ -90,6 +90,7 @@ export const MultichainExample = () => {
 
   const [connector] = useState<HotConnector>(() => {
     const connector = new HotConnector({
+      enableGoogle: true,
       projectId: "1292473190ce7eb75c9de67e15aaad99",
       metadata: {
         name: "Example App",

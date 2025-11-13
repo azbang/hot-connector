@@ -139,6 +139,7 @@ class EvmConnector extends OmniConnector<EvmAccount> {
       this._popup = new WalletsPopup({
         wallets: this.wallets.map((t) => t.info),
         uri: provider ? "x" : "",
+        type: this.type,
 
         onReject: () => {
           provider?.cleanupPendingPairings();

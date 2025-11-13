@@ -1,8 +1,9 @@
-import { allowAllModules, ISupportedWallet, StellarWalletsKit, WalletNetwork } from "@creit.tech/stellar-wallets-kit";
+import { sep43Modules, HotWalletModule, StellarWalletsKit, WalletNetwork, ISupportedWallet } from "@creit.tech/stellar-wallets-kit";
 
 import { LocalStorage } from "../storage";
 import { WalletType } from "../OmniWallet";
 import { OmniConnector } from "../OmniConnector";
+import { WalletsPopup } from "../popups/WalletsPopup";
 import { isInjected } from "../injected/hot";
 import StellarWallet from "./wallet";
 
@@ -16,10 +17,17 @@ class StellarConnector extends OmniConnector<StellarWallet> {
   isSupported = true;
   id = "stellarkit";
 
+  wallets: ISupportedWallet[] = [];
+
   constructor(stellarKit?: StellarWalletsKit) {
     super();
 
-    this.stellarKit = stellarKit || new StellarWalletsKit({ network: WalletNetwork.PUBLIC, modules: allowAllModules() });
+    this.stellarKit = stellarKit || new StellarWalletsKit({ network: WalletNetwork.PUBLIC, modules: isInjected() ? [new HotWalletModule()] : sep43Modules() });
+    this.stellarKit.getSupportedWallets().then((wallets) => {
+      const hot = wallets.find((w) => w.id === "hot-wallet");
+      this.wallets = wallets.filter((w) => w.id !== "hot-wallet");
+      if (hot) this.wallets.unshift(hot);
+    });
 
     this.getConnectedWallet().then((data) => {
       try {
@@ -44,13 +52,22 @@ class StellarConnector extends OmniConnector<StellarWallet> {
   }
 
   async connect() {
-    this.stellarKit.openModal({
-      onWalletSelected: async (option: ISupportedWallet) => {
-        this.stellarKit.setWallet(option.id);
-        const { address } = await this.stellarKit?.getAddress();
-        this.setWallet(new StellarWallet(this, address));
-        this.storage.set("hot-connector:stellar", JSON.stringify({ id: option.id, address }));
-      },
+    return new Promise<void>(async (resolve, reject) => {
+      const popup = new WalletsPopup({
+        type: this.type,
+        wallets: this.wallets.map((t) => ({ name: t.name, icon: t.icon, uuid: t.id, rdns: t.name })),
+        onReject: () => (popup?.destroy(), reject()),
+        onConnect: async (id: string) => {
+          this.stellarKit.setWallet(id);
+          const { address } = await this.stellarKit?.getAddress();
+          this.setWallet(new StellarWallet(this, address));
+          this.storage.set("hot-connector:stellar", JSON.stringify({ id, address }));
+          popup.destroy();
+          resolve();
+        },
+      });
+
+      popup.create();
     });
   }
 

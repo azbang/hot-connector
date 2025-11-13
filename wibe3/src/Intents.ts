@@ -1,4 +1,5 @@
-import { base64 } from "@scure/base";
+import { FinalExecutionOutcome } from "@near-js/types";
+import { rpc } from "./NearRpc";
 
 class Intents {
   async publishSignedIntents(signed: Record<string, any>[], hashes: string[] = []): Promise<string> {
@@ -46,6 +47,19 @@ class Intents {
     return hash;
   }
 
+  async hasPublicKey(accountId: string, publicKey: string): Promise<boolean> {
+    return await rpc.viewMethod({
+      args: { account_id: accountId, public_key: publicKey },
+      methodName: "has_public_key",
+      contractId: "intents.near",
+    });
+  }
+
+  async hasNearAccount(accountId: string): Promise<boolean> {
+    const keys = await rpc.viewAccessKeyList(accountId);
+    return keys.keys.length > 0;
+  }
+
   async simulateIntents(signed: Record<string, any>[]) {
     return await this.viewMethod({
       args: { signed: signed },
@@ -85,34 +99,43 @@ class Intents {
   }
 
   async viewMethod({ contractId, method, args }: { contractId: string; method: string; args: Record<string, any> }) {
-    const rpc = "https://relmn.aurora.dev";
-    const res = await fetch(rpc, {
-      headers: { "Content-Type": "application/json" },
-      method: "POST",
-      body: JSON.stringify({
-        jsonrpc: "2.0",
-        id: "dontcare",
-        method: "query",
-        params: {
-          request_type: "call_function",
-          finality: "final",
-          account_id: contractId,
-          method_name: method,
-          args_base64: base64.encode(new TextEncoder().encode(JSON.stringify(args))),
-        },
-      }),
+    return await rpc.viewMethod({ contractId, methodName: method, args });
+  }
+
+  parseReceipts = (logs: FinalExecutionOutcome) => {
+    const errors: any[] = [];
+
+    logs.receipts_outcome?.forEach((t) => {
+      const status = t.outcome.status;
+      if (typeof status === "string" && status === "Failure") errors.push(status);
+      else if (typeof status === "object" && "Failure" in status) errors.push(status.Failure);
     });
 
-    const { result } = await res.json();
-    if (result.error) throw result.error;
-    if (!result?.result) throw new Error("Failed to call view method");
-
-    try {
-      return JSON.parse(Buffer.from(result.result).toString());
-    } catch {
-      return result.result;
+    if (errors.length > 0) {
+      const ExecutionError = errors[0]?.ActionError?.kind?.FunctionCallError?.ExecutionError;
+      if (ExecutionError) throw ExecutionError;
+      const err = JSON.stringify(errors, null, 2);
+      throw new Error(err);
     }
-  }
+
+    return logs;
+  };
+
+  waitTransactionResult = async (txHash: string, accountId: string, attemps = 0, signal?: AbortSignal, total = 30): Promise<FinalExecutionOutcome> => {
+    if (signal?.aborted) throw new Error("Aborted");
+    if (attemps > total) throw new Error("Transaction not found");
+
+    const options = { tx_hash: txHash, sender_account_id: accountId, wait_until: "EXECUTED" };
+    const logs: any = await rpc.sendJsonRpc("EXPERIMENTAL_tx_status", options).catch(() => null);
+    if (signal?.aborted) throw new Error("Aborted");
+
+    if (logs == null || logs.status === "NotStarted" || logs.transaction == null) {
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      return await this.waitTransactionResult(txHash, accountId, attemps + 1, signal);
+    }
+
+    return this.parseReceipts(logs);
+  };
 }
 
 export default new Intents();

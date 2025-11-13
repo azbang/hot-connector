@@ -4,6 +4,7 @@ import { nodePolyfills } from "vite-plugin-node-polyfills";
 import tailwindcss from "@tailwindcss/vite";
 
 export default defineConfig({
+  server: { port: 1234 },
   plugins: [nodePolyfills(), react(), tailwindcss()],
   base: "/hot-connector/",
 });

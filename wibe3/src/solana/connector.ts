@@ -88,12 +88,8 @@ class SolanaConnector extends OmniConnector<SolanaAccount> {
 
     return new Promise<void>(async (resolve, reject) => {
       this._popup = new WalletsPopup({
-        wallets: this.wallets.map((t) => ({
-          name: t.name,
-          icon: t.icon,
-          uuid: t.name,
-          rdns: t.name,
-        })),
+        type: this.type,
+        wallets: this.wallets.map((t) => ({ name: t.name, icon: t.icon, uuid: t.name, rdns: t.name })),
 
         onReject: () => {
           provider?.cleanupPendingPairings();
