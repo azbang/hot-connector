@@ -42,7 +42,7 @@ export class NearRpc extends JsonRpcProvider {
 
   async viewMethod(args: { contractId: string; methodName: string; args: any }) {
     const payload = Buffer.from(JSON.stringify(args.args), "utf8").toString("base64");
-    const data: any = await rpc.query({
+    const data: any = await this.query({
       args_base64: payload,
       finality: "optimistic",
       request_type: "call_function",
