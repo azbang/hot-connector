@@ -11,9 +11,12 @@ const defaults = {
 };
 
 const setupWalletState = async (network: "mainnet" | "testnet") => {
+  const providers = window.selector?.providers?.[network];
+  const hasProviders = providers && providers.length > 0;
+
   const near = await nearAPI.connect({
-    nodeUrl: window.selector?.providers?.[network][0] || defaults[network],
-    provider: new NearRpc(window.selector?.providers?.[network]),
+    nodeUrl: hasProviders ? providers[0] : defaults[network],
+    provider: hasProviders ? new NearRpc(providers) : new NearRpc([defaults[network]]),
     networkId: network,
     keyStore: keyStore,
     headers: {},

@@ -1,5 +1,5 @@
 export const uuid4 = () => {
-  if (typeof window.crypto !== "undefined" && typeof window.crypto.randomUUID === "function")
+  if (typeof window !== "undefined" && typeof window.crypto !== "undefined" && typeof window.crypto.randomUUID === "function")
     return window.crypto.randomUUID();
 
   return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (c) {
