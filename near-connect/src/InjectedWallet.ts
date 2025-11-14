@@ -17,9 +17,11 @@ export class InjectedWallet {
     return this.wallet.manifest;
   }
 
-  async signIn(data?: { network?: Network }): Promise<Array<Account>> {
+  async signIn(data?: { network?: Network, contractId?: string, methodNames?: string[] }): Promise<Array<Account>> {
     const network = data?.network || this.connector.network;
-    return this.wallet.signIn({ network });
+    const contractId = data?.contractId || "";
+    const methodNames = data?.methodNames || [];
+    return this.wallet.signIn({ network, contractId, methodNames });
   }
 
   async signOut(data?: { network?: Network }): Promise<void> {

@@ -103,7 +103,7 @@ export interface NearWalletBase {
   /**
    * Programmatically sign in. Hardware wallets (e.g. Ledger) require `derivationPaths` to validate access key permissions.
    */
-  signIn(data?: { network?: Network }): Promise<Array<Account>>;
+  signIn(data?: { network?: Network, contractId?: string, methodNames?: string[] }): Promise<Array<Account>>;
   /**
    * Sign out from the wallet.
    */
