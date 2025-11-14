@@ -246,8 +246,8 @@ export class NearConnector {
     });
   }
 
-  async connect(id?: string) {
-    await this.whenManifestLoaded.catch(() => {});
+  async connect({ id, contractId, methodNames }: { id?: string; contractId?: string; methodNames?: string[] } = {}) {
+    await this.whenManifestLoaded.catch(() => { });
     if (!id) id = await this.selectWallet();
 
     try {
@@ -257,7 +257,7 @@ export class NearConnector {
       await this.storage.set("selected-wallet", id);
       this.logger?.log(`Set preferred wallet, try to signIn`, id);
 
-      const accounts = await wallet.signIn();
+      const accounts = await wallet.signIn({ network: this.network, contractId, methodNames });
       if (!accounts?.length) throw new Error("Failed to sign in");
 
       await this.disconnectIfBanned(wallet, accounts);
