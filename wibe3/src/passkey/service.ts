@@ -81,10 +81,7 @@ function getRootDomain(hostname: string): string {
   return parts.slice(-2).join(".");
 }
 
-export async function signMessage(
-  challenge: Uint8Array | ArrayBuffer,
-  { rawId }: WebauthnCredential
-): Promise<AuthenticatorAssertionResponse> {
+export async function signMessage(challenge: Uint8Array | ArrayBuffer, { rawId }: WebauthnCredential): Promise<AuthenticatorAssertionResponse> {
   // @ts-ignore
   const assertion = await navigator.credentials.get({
     publicKey: {
@@ -114,9 +111,7 @@ async function extractCredentialPublicKey(credential: PublicKeyCredential) {
   return parsePublicKeyWithWebCrypto(credential.response as AuthenticatorAttestationResponse);
 }
 
-async function parsePublicKeyWithWebCrypto(
-  response: AuthenticatorAttestationResponse
-): Promise<{ publicKey: Uint8Array; algorithm: number }> {
+async function parsePublicKeyWithWebCrypto(response: AuthenticatorAttestationResponse): Promise<{ publicKey: Uint8Array; algorithm: number }> {
   const publicKeyBuffer = response.getPublicKey();
   if (publicKeyBuffer == null) {
     throw new Error("Public key is null");

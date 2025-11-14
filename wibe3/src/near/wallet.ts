@@ -21,12 +21,17 @@ type Account = {
 type Network = "mainnet" | "testnet";
 
 export default class NearWallet extends OmniWallet {
-  constructor(readonly connector: NearConnector, readonly wallet: NearWalletBase) {
-    super(connector);
-  }
+  readonly address: string;
+  readonly publicKey?: string;
+  readonly omniAddress: string;
+  readonly type: WalletType;
 
-  get type(): WalletType {
-    return WalletType.NEAR;
+  constructor(readonly connector: NearConnector, address: string, readonly wallet: NearWalletBase) {
+    super(connector);
+
+    this.address = address;
+    this.omniAddress = this.address;
+    this.type = WalletType.NEAR;
   }
 
   get manifest() {
@@ -61,22 +66,6 @@ export default class NearWallet extends OmniWallet {
     return this.wallet.signMessage(params);
   }
 
-  async getAddress(): Promise<string> {
-    const accounts = await this.wallet.getAccounts();
-    if (accounts.length === 0) throw new Error("No account found");
-    return accounts[0].accountId;
-  }
-
-  async getPublicKey(): Promise<string> {
-    const accounts = await this.wallet.getAccounts();
-    if (accounts.length === 0) throw new Error("No account found");
-    return accounts[0].publicKey;
-  }
-
-  async getIntentsAddress(): Promise<string> {
-    return await this.getAddress();
-  }
-
   async signIntentsWithAuth(domain: string, intents?: Record<string, any>[]) {
     const accounts = await this.wallet.getAccounts();
     if (accounts.length === 0) throw new Error("No account found");
@@ -98,11 +87,10 @@ export default class NearWallet extends OmniWallet {
 
   async signIntents(intents: Record<string, any>[], options?: { nonce?: Uint8Array; deadline?: number }): Promise<Record<string, any>> {
     const nonce = new Uint8Array(options?.nonce || window.crypto.getRandomValues(new Uint8Array(32)));
-    const signerId = await this.getIntentsAddress();
 
     const message = JSON.stringify({
       deadline: options?.deadline ? new Date(options.deadline).toISOString() : "2100-01-01T00:00:00.000Z",
-      signer_id: signerId,
+      signer_id: this.omniAddress,
       intents: intents,
     });
 

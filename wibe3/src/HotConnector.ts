@@ -28,7 +28,7 @@ export class HotConnector {
 
   constructor(options?: { enableGoogle?: boolean; connectors?: OmniConnector[] } & EvmConnectorOptions & SolanaConnectorOptions) {
     this.enableGoogle = options?.enableGoogle ?? false;
-    this.connectors = options?.connectors || [near(), evm(options), solana(options), stellar(), ton(), passkey()];
+    this.connectors = options?.connectors || [near(), evm(options), solana(options), stellar(), ton()];
 
     this.connectors.forEach((t) => {
       t.onConnect((payload) => this.events.emit("connect", payload));
@@ -64,22 +64,45 @@ export class HotConnector {
 
   async connectGoogle() {
     // TODO: Implement this
-    if ("hotExtension" in window) {
+    if ("hotExtension" in window && (window.hotExtension as any).connect) {
       const hotExtension = window.hotExtension as any;
       const accounts = await hotExtension.connect({ type: "google" });
       console.log("accounts", accounts);
       return;
     }
 
-    const width = 400;
-    const height = 600;
+    const width = 480;
+    const height = 640;
+    const wallet = "http://localhost:1234";
     const x = (window.screen.width - width) / 2;
     const y = (window.screen.height - height) / 2;
-    const popup = window.open("https://app.hot-labs.org?startapp=connect-google", "_blank", `popup=1,width=${width},height=${height},top=${y},left=${x}`);
+    const popup = window.open(`${wallet}?startapp=connect-google`, "_blank", `popup=1,width=${width},height=${height},top=${y},left=${x}`);
 
-    popup?.addEventListener("message", (event) => {
-      console.log("message");
-      console.log(event);
+    return new Promise<void>(async (resolve, reject) => {
+      const interval = setInterval(() => {
+        if (!popup?.closed) return;
+        clearInterval(interval);
+        reject(new Error("User rejected"));
+      }, 100);
+
+      window.addEventListener("message", (event) => {
+        if (event.origin !== wallet) return;
+        if (event.data.type === "google-rejected") {
+          clearInterval(interval);
+          reject(new Error("User rejected"));
+        }
+
+        if (event.data.type === "google-connected") {
+          event.data.accounts.forEach((account: { type: number; address: string; publicKey: string }) => {
+            const connector = this.connectors.find((t) => t.type === account.type);
+            if (connector) connector.connectWebWallet(account.address, account.publicKey);
+          });
+
+          resolve();
+          clearInterval(interval);
+          popup?.close();
+        }
+      });
     });
   }
 
@@ -87,22 +110,17 @@ export class HotConnector {
     if (type) return this.connectors.find((t) => t.type === type || t.id === type)?.connect();
 
     return new Promise<void>(async (resolve, reject) => {
-      const connectGoogle = () => {
-        this.connectGoogle();
+      const list = () => this.connectors.map((t) => ({ address: t.wallet?.address, name: t.name, icon: t.icon, id: t.id }));
+      const connectGoogle = async () => {
+        await this.connectGoogle();
+        popup.update({ wallets: list() });
+        await new Promise((resolve) => setTimeout(resolve, 400));
         popup.destroy();
         resolve();
       };
 
       const popup = new MultichainPopup({
-        wallets: await Promise.all(
-          this.connectors.map(async (t) => ({
-            address: await t.wallet?.getAddress().catch(() => undefined),
-            name: t.name,
-            icon: t.icon,
-            id: t.id,
-          }))
-        ),
-
+        wallets: list(),
         onGoogleConnect: this.enableGoogle ? connectGoogle : undefined,
 
         onConnect: (type) => {

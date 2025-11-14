@@ -3,14 +3,15 @@ import { OmniConnector } from "../OmniConnector";
 import { WalletType } from "../OmniWallet";
 import { isInjected } from "../injected/hot";
 import TonWallet from "./wallet";
+import TonWebWallet from "./web";
 
-class TonConnector extends OmniConnector<TonWallet> {
+class TonConnector extends OmniConnector<TonWallet | TonWebWallet> {
   private tonConnect!: TonConnectUI;
 
   type = WalletType.TON;
   isSupported = true;
   name = "TON Wallet";
-  icon = "https://storage.herewallet.app/ft/1111:native.png";
+  icon = "https://storage.herewallet.app/upload/3ffa61e237f8e38d390abd60200db8edff3ec2b20aad0cc0a8c7a8ba9c318124.png";
   id = "ton-connect";
 
   constructor(tonConnect?: TonConnectUI) {
@@ -41,6 +42,10 @@ class TonConnector extends OmniConnector<TonWallet> {
         });
       }
     }
+  }
+
+  connectWebWallet(address: string, publicKey: string) {
+    this.setWallet(new TonWebWallet(this, address, publicKey));
   }
 
   async connect() {

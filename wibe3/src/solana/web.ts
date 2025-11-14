@@ -1,24 +1,27 @@
-import { base64, base58, hex, base32 } from "@scure/base";
+import type { Connection, Transaction, VersionedTransaction } from "@solana/web3.js";
+import type { Wallet, WalletAccount } from "@wallet-standard/base";
+import { base64, base58, hex } from "@scure/base";
 
 import { OmniWallet, WalletType } from "../OmniWallet";
-import StellarConnector from "./connector";
+import SolanaConnector from "./connector";
 
-class StellarWallet extends OmniWallet {
-  readonly type = WalletType.STELLAR;
+class SolanaWebWallet extends OmniWallet {
+  readonly type = WalletType.SOLANA;
 
-  constructor(readonly connector: StellarConnector, readonly address: string) {
+  constructor(readonly connector: SolanaConnector, readonly address: string) {
     super(connector);
-    this.address = address;
   }
 
   get publicKey() {
-    const payload = base32.decode(this.address);
-    return base58.encode(payload.slice(1, -2));
+    return this.address;
   }
 
   get omniAddress() {
-    const payload = base32.decode(this.address);
-    return hex.encode(payload.slice(1, -2));
+    return hex.encode(base58.decode(this.address)).toLowerCase();
+  }
+
+  async disconnect(data?: { silent?: boolean }) {
+    super.disconnect(data);
   }
 
   async signIntentsWithAuth(domain: string, intents?: Record<string, any>[]) {
@@ -28,15 +31,19 @@ class StellarWallet extends OmniWallet {
 
     return {
       signed: await this.signIntents(intents || [], { nonce: new Uint8Array(nonce) }),
-      publicKey: `ed25519:${this.publicKey}`,
-      chainId: WalletType.STELLAR,
+      publicKey: `ed25519:${this.address}`,
+      chainId: WalletType.SOLANA,
       address: this.address,
       seed,
     };
   }
 
+  async sendTransaction(transaction: Transaction | VersionedTransaction, connection: Connection, options?: any): Promise<string> {
+    throw new Error("Not implemented");
+  }
+
   async signMessage(message: string) {
-    return await this.connector.stellarKit.signMessage(message);
+    return new Uint8Array(0);
   }
 
   async signIntents(intents: Record<string, any>[], options?: { deadline?: number; nonce?: Uint8Array }): Promise<Record<string, any>> {
@@ -51,14 +58,13 @@ class StellarWallet extends OmniWallet {
     });
 
     const signature = await this.signMessage(message);
-
     return {
-      signature: `ed25519:${base58.encode(base64.decode(signature.signedMessage))}`,
+      signature: `ed25519:${base58.encode(signature)}`,
       public_key: `ed25519:${this.publicKey}`,
-      standard: "sep53",
+      standard: "raw_ed25519",
       payload: message,
     };
   }
 }
 
-export default StellarWallet;
+export default SolanaWebWallet;

@@ -1,6 +1,6 @@
 import { FC, useState } from "react";
 
-import { HotConnector, Intents, WalletType } from "@hot-labs/wibe3";
+import { HotConnector, Intents, OmniWallet } from "../../wibe3/src";
 import { NearConnector, NearWalletBase } from "@hot-labs/near-connect";
 
 import { NetworkSelector } from "./form-component/NetworkSelector.tsx";
@@ -79,15 +79,7 @@ export const ExampleNEAR: FC = () => {
 };
 
 export const MultichainExample = () => {
-  const [wallets, setWallets] = useState<Record<WalletType, string | null>>({
-    [WalletType.NEAR]: null,
-    [WalletType.EVM]: null,
-    [WalletType.SOLANA]: null,
-    [WalletType.TON]: null,
-    [WalletType.STELLAR]: null,
-    [WalletType.PASSKEY]: null,
-  });
-
+  const [wallets, setWallets] = useState<OmniWallet[]>([]);
   const [connector] = useState<HotConnector>(() => {
     const connector = new HotConnector({
       enableGoogle: true,
@@ -100,17 +92,8 @@ export const MultichainExample = () => {
       },
     });
 
-    connector.onConnect(async ({ wallet }) => {
-      if (!wallet) return;
-      const address = await wallet.getAddress();
-      setWallets((t) => ({ ...t, [wallet.type]: address }));
-    });
-
-    connector.onDisconnect(({ wallet }) => {
-      if (!wallet) return;
-      setWallets((t) => ({ ...t, [wallet.type]: null }));
-    });
-
+    connector.onConnect(() => setWallets([...connector.wallets]));
+    connector.onDisconnect(() => setWallets([...connector.wallets]));
     return connector;
   });
 
@@ -122,17 +105,15 @@ export const MultichainExample = () => {
         Open connector
       </button>
 
-      {Object.entries(wallets).map(
-        ([type, address]) =>
-          address != null && (
-            <div key={type} style={{ width: 200 }}>
-              <p style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{address}</p>
+      {wallets.map(
+        (wallet) =>
+          wallet != null && (
+            <div key={wallet.type} style={{ width: 200 }}>
+              <p style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{wallet.address}</p>
               <button
                 className={"input-button"}
                 onClick={async () => {
                   try {
-                    const wallet = connector.wallets.find((t) => t.type === +type);
-                    if (!wallet) return;
                     const { signed } = await wallet.auth("auth", [], async (t) => t);
                     const result = await Intents.simulateIntents([signed]);
                     console.log(result);

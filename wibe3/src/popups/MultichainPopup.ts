@@ -37,6 +37,36 @@ export class MultichainPopup extends Popup<{ wallets: Wallet[] }> {
     });
   }
 
+  get google() {
+    return html`
+      <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 28 28" fill="none">
+        <g clip-path="url(#clip0_21324_42766)">
+          <path
+            d="M27.3514 14.2618C27.3514 13.1146 27.2583 12.2775 27.0568 11.4094H13.9575V16.5871H21.6465C21.4915 17.8738 20.6544 19.8116 18.7941 21.1137L18.7681 21.287L22.9098 24.4956L23.1968 24.5242C25.8321 22.0904 27.3514 18.5093 27.3514 14.2618Z"
+            fill="#4285F4"
+          />
+          <path
+            d="M13.9574 27.9038C17.7244 27.9038 20.8868 26.6636 23.1966 24.5244L18.794 21.1138C17.6159 21.9354 16.0346 22.509 13.9574 22.509C10.2679 22.509 7.13651 20.0753 6.02025 16.7113L5.85663 16.7252L1.54997 20.0582L1.49365 20.2147C3.78794 24.7723 8.5006 27.9038 13.9574 27.9038Z"
+            fill="#34A853"
+          />
+          <path
+            d="M6.02062 16.7114C5.72609 15.8433 5.55563 14.9131 5.55563 13.952C5.55563 12.9908 5.72609 12.0607 6.00513 11.1926L5.99733 11.0077L1.6367 7.62122L1.49403 7.68908C0.54844 9.58036 0.00585938 11.7042 0.00585938 13.952C0.00585938 16.1998 0.54844 18.3235 1.49403 20.2148L6.02062 16.7114Z"
+            fill="#FBBC05"
+          />
+          <path
+            d="M13.9574 5.3947C16.5772 5.3947 18.3444 6.52635 19.3521 7.47205L23.2896 3.6275C20.8714 1.37969 17.7244 0 13.9574 0C8.5006 0 3.78794 3.1314 1.49365 7.68899L6.00475 11.1925C7.13651 7.82857 10.2679 5.3947 13.9574 5.3947Z"
+            fill="#EB4335"
+          />
+        </g>
+        <defs>
+          <clipPath id="clip0_21324_42766">
+            <rect width="27.37" height="28" fill="white" />
+          </clipPath>
+        </defs>
+      </svg>
+    `;
+  }
+
   get logout() {
     return html`
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -73,8 +103,18 @@ export class MultichainPopup extends Popup<{ wallets: Wallet[] }> {
           ${this.state.wallets.map((wallet) => this.walletOption(wallet))}
           ${this.delegate.onGoogleConnect != null &&
           html`
-            <div>
-              <button class="google-connect">Connect with Google</button>
+            <div style="margin: 4px 0;display: flex; width: 100%; align-items: center; justify-content: center; gap: 8px;">
+              <div style="height: 1px; flex: 1; background: rgba(255,255,255,0.1);"></div>
+              <div>or</div>
+              <div style="height: 1px; flex: 1; background: rgba(255,255,255,0.1);"></div>
+            </div>
+            <div class="connect-item google-connect">
+              <div style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; border-radius: 12px; background: #1a1a1a;">
+                ${this.google}
+              </div>
+              <div class="connect-item-info">
+                <span>Continue with Google</span>
+              </div>
             </div>
           `}
         </div>

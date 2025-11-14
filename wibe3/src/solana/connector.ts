@@ -8,6 +8,7 @@ import { LocalStorage } from "../storage";
 import { getWallets } from "./wallets";
 import SolanaAccount from "./wallet";
 import { isInjected } from "../injected/hot";
+import SolanaWebWallet from "./web";
 
 export interface SolanaConnectorOptions {
   projectId?: string;
@@ -21,10 +22,10 @@ export interface SolanaConnectorOptions {
 
 const wallets = getWallets();
 
-class SolanaConnector extends OmniConnector<SolanaAccount> {
+class SolanaConnector extends OmniConnector<SolanaAccount | SolanaWebWallet> {
   type = WalletType.SOLANA;
   name = "Solana Wallet";
-  icon = "https://storage.herewallet.app/ft/1001:native.png";
+  icon = "https://storage.herewallet.app/upload/8700f33153ad813e133e5bf9b791b5ecbeea66edca6b8d17aeccb8048eb29ef7.png";
   id = "solana-reown";
   isSupported = true;
 
@@ -75,6 +76,10 @@ class SolanaConnector extends OmniConnector<SolanaAccount> {
     wallets.on("unregister", (wallet) => {
       this.wallets = this.wallets.filter((w) => w.name !== wallet.name);
     });
+  }
+
+  connectWebWallet(address: string) {
+    this.setWallet(new SolanaWebWallet(this, address));
   }
 
   async getConnectedWallet() {

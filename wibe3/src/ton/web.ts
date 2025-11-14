@@ -1,40 +1,25 @@
-import { SendTransactionRequest, TonConnectUI } from "@tonconnect/ui";
-import { toUserFriendlyAddress } from "@tonconnect/ui";
+import { SendTransactionRequest } from "@tonconnect/ui";
 import { base58, base64, hex } from "@scure/base";
 
 import { OmniWallet, WalletType } from "../OmniWallet";
 import TonConnector from "./connector";
 
-class TonWallet extends OmniWallet {
+class TonWebWallet extends OmniWallet {
   readonly type = WalletType.TON;
 
-  constructor(readonly connector: TonConnector, readonly wallet: TonConnectUI) {
+  constructor(readonly connector: TonConnector, readonly address: string, readonly publicKey: string) {
     super(connector);
   }
 
-  get address() {
-    if (!this.wallet.account) throw new Error("No account found");
-    return toUserFriendlyAddress(this.wallet.account.address);
-  }
-
-  get publicKey() {
-    if (!this.wallet.account?.publicKey) throw new Error("No public key found");
-    return base58.encode(hex.decode(this.wallet.account.publicKey));
-  }
-
   get omniAddress() {
-    if (!this.wallet.account?.publicKey) throw new Error("No public key found");
-    return this.wallet.account.publicKey.toLowerCase();
+    return this.publicKey.toLowerCase();
   }
 
   async sendTransaction(msgs: SendTransactionRequest) {
-    return this.wallet.sendTransaction(msgs);
+    throw new Error("Not implemented");
   }
 
   async signIntentsWithAuth(domain: string, intents?: Record<string, any>[]) {
-    const address = this.wallet.account?.address;
-    if (!address) throw new Error("Wallet not connected");
-
     const seed = hex.encode(window.crypto.getRandomValues(new Uint8Array(32)));
     const msgBuffer = new TextEncoder().encode(`${domain}_${seed}`);
     const nonce = await window.crypto.subtle.digest("SHA-256", new Uint8Array(msgBuffer));
@@ -43,9 +28,13 @@ class TonWallet extends OmniWallet {
       signed: await this.signIntents(intents || [], { nonce: new Uint8Array(nonce) }),
       publicKey: `ed25519:${this.publicKey}`,
       chainId: WalletType.TON,
-      address: address,
+      address: this.address,
       seed,
     };
+  }
+
+  async signMessage(message: string): Promise<Record<string, any>> {
+    throw new Error("Not implemented");
   }
 
   async signIntents(intents: Record<string, any>[], options?: { deadline?: number; nonce?: Uint8Array }) {
@@ -58,7 +47,7 @@ class TonWallet extends OmniWallet {
       intents,
     };
 
-    const result = await this.wallet.signData({ text: JSON.stringify(message), type: "text" });
+    const result = await this.signMessage(JSON.stringify(message));
 
     return {
       ...result,
@@ -69,4 +58,4 @@ class TonWallet extends OmniWallet {
   }
 }
 
-export default TonWallet;
+export default TonWebWallet;

@@ -18,14 +18,17 @@ export abstract class OmniConnector<T extends OmniWallet = OmniWallet> {
   abstract icon: string;
   abstract id: string;
 
+  abstract connectWebWallet(address: string, publicKey?: string): void;
+
   protected setWallet(wallet: T) {
-    this.events.emit("connect", { wallet });
     this.wallet = wallet;
+    this.events.emit("connect", { wallet });
   }
 
   protected removeWallet() {
-    this.events.emit("disconnect", { wallet: this.wallet! });
+    const wallet = this.wallet!;
     this.wallet = null;
+    this.events.emit("disconnect", { wallet });
   }
 
   removeAllListeners() {

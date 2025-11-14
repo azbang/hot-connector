@@ -25,15 +25,15 @@ export interface SignedAuth {
 export abstract class OmniWallet {
   constructor(readonly connector?: OmniConnector) {}
 
+  abstract address: string;
+  abstract publicKey?: string;
+  abstract omniAddress: string;
+  abstract type: WalletType;
+
   async disconnect({ silent = false }: { silent?: boolean } = {}) {
     if (!this.connector) throw new Error("Connector not implemented");
     await this.connector.disconnect({ silent });
   }
-
-  abstract get type(): WalletType;
-  abstract getAddress(): Promise<string>;
-  abstract getPublicKey(): Promise<string>;
-  abstract getIntentsAddress(): Promise<string>;
 
   abstract signIntentsWithAuth(domain: string, intents?: Record<string, any>[]): Promise<SignedAuth>;
   abstract signIntents(intents: Record<string, any>[], options?: { nonce?: Uint8Array; deadline?: number }): Promise<Record<string, any>>;
@@ -88,15 +88,13 @@ export abstract class OmniWallet {
   }
 
   async getAssets() {
-    const tradingAddress = await this.getIntentsAddress();
-    const assets = await Intents.getIntentsAssets(tradingAddress);
-    const balances = await Intents.getIntentsBalances(assets, tradingAddress);
+    const assets = await Intents.getIntentsAssets(this.omniAddress);
+    const balances = await Intents.getIntentsBalances(assets, this.omniAddress);
     return balances;
   }
 
   async getTokenBalances(tokens: OmniToken[]): Promise<TokenBalance[]> {
-    const tradingAddress = await this.getIntentsAddress();
-    const balances = await Intents.getIntentsBalances(tokens, tradingAddress);
+    const balances = await Intents.getIntentsBalances(tokens, this.omniAddress);
 
     return tokens.map((token) => {
       const metadata = OmniTokenMetadata[token];

@@ -4,6 +4,7 @@ import { base58 } from "@scure/base";
 import { OmniWallet, SignedAuth, WalletType } from "./OmniWallet";
 
 class LocalWallet extends OmniWallet {
+  readonly type = WalletType.NEAR;
   #keyPair: KeyPair;
 
   constructor({ privateKey }: { privateKey: string }) {
@@ -12,11 +13,15 @@ class LocalWallet extends OmniWallet {
     this.#keyPair = KeyPair.fromString(key as KeyPairString);
   }
 
-  get type(): WalletType {
-    return WalletType.NEAR;
+  get address() {
+    return this.#keyPair.getPublicKey().toString().toLowerCase();
   }
 
-  async getIntentsAddress(): Promise<string> {
+  get publicKey() {
+    return this.#keyPair.getPublicKey().toString();
+  }
+
+  get omniAddress() {
     return Buffer.from(this.#keyPair.getPublicKey().data).toString("hex").toLowerCase();
   }
 
@@ -32,18 +37,13 @@ class LocalWallet extends OmniWallet {
     throw new Error("Not implemented");
   }
 
-  async signIntents(
-    intents: Record<string, any>[],
-    options?: { deadline?: number; nonce?: Uint8Array }
-  ): Promise<Record<string, any>> {
+  async signIntents(intents: Record<string, any>[], options?: { deadline?: number; nonce?: Uint8Array }): Promise<Record<string, any>> {
     const nonce = new Uint8Array(options?.nonce || window.crypto.getRandomValues(new Uint8Array(32)));
-    const signerId = await this.getIntentsAddress();
-
     const message = JSON.stringify({
       deadline: options?.deadline ? new Date(options.deadline).toISOString() : "2100-01-01T00:00:00.000Z",
       nonce: Buffer.from(nonce).toString("base64"),
       verifying_contract: "intents.near",
-      signer_id: signerId,
+      signer_id: this.omniAddress,
       intents,
     });
 

@@ -28,6 +28,8 @@ class PasskeyConnector extends OmniConnector<PasskeyWallet> {
     return typeof window !== "undefined" && typeof window.PublicKeyCredential === "function";
   }
 
+  connectWebWallet() {}
+
   async connectNew(nickname?: string) {
     const credential = await createNew(nickname);
     await this.retryOperation(async () => {

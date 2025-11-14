@@ -6,12 +6,22 @@ import { OmniWallet, WalletType } from "../OmniWallet";
 import SolanaConnector from "./connector";
 
 class SolanaWallet extends OmniWallet {
+  readonly type = WalletType.SOLANA;
+
   constructor(readonly connector: SolanaConnector, readonly wallet: Wallet) {
     super(connector);
   }
 
-  get type() {
-    return WalletType.SOLANA;
+  get address() {
+    return this.wallet.accounts[0].address;
+  }
+
+  get publicKey() {
+    return base58.encode(this.wallet.accounts[0].publicKey as Uint8Array);
+  }
+
+  get omniAddress() {
+    return hex.encode(base58.decode(this.address)).toLowerCase();
   }
 
   async disconnect(data?: { silent?: boolean }) {
@@ -34,36 +44,16 @@ class SolanaWallet extends OmniWallet {
     return accounts[0];
   }
 
-  getAddress = async (): Promise<string> => {
-    const account = await this.getAccount();
-    return account.address;
-  };
-
-  getPublicKey = async (): Promise<string> => {
-    const account = await this.getAccount();
-    try {
-      return base58.encode(account.publicKey as Uint8Array);
-    } catch {
-      return account.address;
-    }
-  };
-
-  getIntentsAddress = async (): Promise<string> => {
-    const address = await this.getAddress();
-    return hex.encode(base58.decode(address)).toLowerCase();
-  };
-
   async signIntentsWithAuth(domain: string, intents?: Record<string, any>[]) {
-    const address = await this.getAddress();
     const seed = hex.encode(window.crypto.getRandomValues(new Uint8Array(32)));
     const msgBuffer = new TextEncoder().encode(`${domain}_${seed}`);
     const nonce = await window.crypto.subtle.digest("SHA-256", new Uint8Array(msgBuffer));
 
     return {
       signed: await this.signIntents(intents || [], { nonce: new Uint8Array(nonce) }),
-      publicKey: `ed25519:${address}`,
+      publicKey: `ed25519:${this.address}`,
       chainId: WalletType.SOLANA,
-      address: address,
+      address: this.address,
       seed,
     };
   }
@@ -115,21 +105,19 @@ class SolanaWallet extends OmniWallet {
 
   async signIntents(intents: Record<string, any>[], options?: { deadline?: number; nonce?: Uint8Array }): Promise<Record<string, any>> {
     const nonce = new Uint8Array(options?.nonce || window.crypto.getRandomValues(new Uint8Array(32)));
-    const signerId = await this.getIntentsAddress();
-    const publicKey = await this.getPublicKey();
 
     const message = JSON.stringify({
       deadline: options?.deadline ? new Date(options.deadline).toISOString() : "2100-01-01T00:00:00.000Z",
       nonce: base64.encode(nonce),
       verifying_contract: "intents.near",
-      signer_id: signerId,
+      signer_id: this.omniAddress,
       intents: intents,
     });
 
     const signature = await this.signMessage(message);
     return {
       signature: `ed25519:${base58.encode(signature)}`,
-      public_key: `ed25519:${publicKey}`,
+      public_key: `ed25519:${this.publicKey}`,
       standard: "raw_ed25519",
       payload: message,
     };

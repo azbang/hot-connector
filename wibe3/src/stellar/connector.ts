@@ -13,7 +13,7 @@ class StellarConnector extends OmniConnector<StellarWallet> {
 
   type = WalletType.STELLAR;
   name = "Stellar Wallet";
-  icon = "https://storage.herewallet.app/ft/1100:native.png";
+  icon = "https://storage.herewallet.app/upload/1469894e53ca248ac6adceb2194e6950a13a52d972beb378a20bce7815ba01a4.png";
   isSupported = true;
   id = "stellarkit";
 
@@ -49,6 +49,11 @@ class StellarConnector extends OmniConnector<StellarWallet> {
     }
 
     return await this.storage.get("hot-connector:stellar");
+  }
+
+  connectWebWallet(address: string) {
+    this.setWallet(new StellarWallet(this, address));
+    this.storage.set("hot-connector:stellar", JSON.stringify({ id: "hot-wallet", address }));
   }
 
   async connect() {
