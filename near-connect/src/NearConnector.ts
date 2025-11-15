@@ -2,6 +2,8 @@ import { EventEmitter } from "./helpers/events";
 import { NearWalletsPopup } from "./popups/NearWalletsPopup";
 import { LocalStorage, DataStorage } from "./helpers/storage";
 import IndexedDB from "./helpers/indexdb";
+import { PluginManager } from "./helpers/plugin-manager";
+import { WalletProxy } from "./helpers/wallet-proxy";
 
 import { EventNearWalletInjected, WalletManifest, Network, WalletFeatures, Logger, NearWalletBase, Account } from "./types/wallet";
 import { ParentFrameWallet } from "./ParentFrameWallet";
@@ -9,6 +11,7 @@ import { InjectedWallet } from "./InjectedWallet";
 import { SandboxWallet } from "./SandboxedWallet";
 import { EventMap } from "./types/wallet-events";
 import { Action } from "./types/transactions";
+import type { Plugin } from "./types/plugin";
 
 interface NearConnectorOptions {
   isBannedNearAddress?: (address: string) => Promise<boolean>;
@@ -36,6 +39,7 @@ export class NearConnector {
   private storage: DataStorage;
   readonly events: EventEmitter<EventMap>;
   readonly db: IndexedDB;
+  readonly pluginManager: PluginManager;
   logger?: Logger;
 
   wallets: NearWalletBase[] = [];
@@ -57,6 +61,7 @@ export class NearConnector {
     this.db = new IndexedDB("hot-connector", "wallets");
     this.storage = options?.storage ?? new LocalStorage();
     this.events = options?.events ?? new EventEmitter<EventMap>();
+    this.pluginManager = new PluginManager();
     this.logger = options?.logger;
 
     this.network = options?.network ?? "mainnet";
@@ -296,18 +301,30 @@ export class NearConnector {
   async wallet(id?: string | null): Promise<NearWalletBase> {
     await this.whenManifestLoaded.catch(() => {});
 
+    let wallet: NearWalletBase;
+
     if (!id) {
-      return this.getConnectedWallet()
+      wallet = await this.getConnectedWallet()
         .then(({ wallet }) => wallet)
         .catch(async () => {
           await this.storage.remove("selected-wallet");
           throw new Error("No accounts found");
         });
+    } else {
+      const foundWallet = this.wallets.find((wallet) => wallet.manifest.id === id);
+      if (!foundWallet) throw new Error("Wallet not found");
+      wallet = foundWallet;
     }
 
-    const wallet = this.wallets.find((wallet) => wallet.manifest.id === id);
-    if (!wallet) throw new Error("Wallet not found");
-    return wallet;
+    // Wrap wallet with plugin system
+    return new WalletProxy(wallet, this.pluginManager);
+  }
+
+  /**
+   * Register a plugin to intercept wallet method calls
+   */
+  use(plugin: Plugin): void {
+    this.pluginManager.use(plugin);
   }
 
   on<K extends keyof EventMap>(event: K, callback: (payload: EventMap[K]) => void): void {
