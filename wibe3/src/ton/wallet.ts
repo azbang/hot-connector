@@ -1,14 +1,20 @@
-import { SendTransactionRequest, TonConnectUI } from "@tonconnect/ui";
+import { SendTransactionRequest, SignDataPayload, SignDataResponse } from "@tonconnect/ui";
 import { toUserFriendlyAddress } from "@tonconnect/ui";
 import { base58, base64, hex } from "@scure/base";
 
 import { OmniWallet, WalletType } from "../OmniWallet";
 import TonConnector from "./connector";
 
+interface ProtocolWallet {
+  sendTransaction: (params: SendTransactionRequest) => Promise<any>;
+  signData: (params: SignDataPayload) => Promise<SignDataResponse>;
+  account: { address: string; publicKey?: string };
+}
+
 class TonWallet extends OmniWallet {
   readonly type = WalletType.TON;
 
-  constructor(readonly connector: TonConnector, readonly wallet: TonConnectUI) {
+  constructor(readonly connector: TonConnector, readonly wallet: ProtocolWallet) {
     super(connector);
   }
 

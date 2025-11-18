@@ -1,9 +1,12 @@
 import { LogoutPopup } from "./popups/LogoutPopup";
 import { OmniWallet, WalletType } from "./OmniWallet";
 import { EventEmitter } from "./events";
+import { LocalStorage } from "./storage";
 
 export abstract class OmniConnector<T extends OmniWallet = OmniWallet> {
   wallet: T | null = null;
+
+  private storage = new LocalStorage();
   protected events = new EventEmitter<{
     connect: { wallet: T };
     disconnect: { wallet: T };
@@ -29,6 +32,20 @@ export abstract class OmniConnector<T extends OmniWallet = OmniWallet> {
     const wallet = this.wallet!;
     this.wallet = null;
     this.events.emit("disconnect", { wallet });
+  }
+
+  async setStorage(obj: { type?: string; id?: string; address?: string; publicKey?: string }) {
+    await this.storage.set(`wibe3:${this.id}`, JSON.stringify(obj));
+  }
+
+  async removeStorage() {
+    await this.storage.remove(`wibe3:${this.id}`);
+  }
+
+  async getStorage(): Promise<{ type?: string; id?: string; address?: string; publicKey?: string }> {
+    const data = await this.storage.get(`wibe3:${this.id}`);
+    if (!data) throw new Error("No storage found");
+    return JSON.parse(data);
   }
 
   removeAllListeners() {

@@ -1,11 +1,12 @@
 import { MultichainPopup } from "./popups/MultichainPopup";
 import { EventEmitter } from "./events";
 
+import { requestWebWallet } from "./injected/wallet";
 import { OmniWallet, WalletType } from "./OmniWallet";
 import { OmniConnector } from "./OmniConnector";
 
-import PasskeyConnector from "./passkey/connector";
 import NearConnector from "./near/connector";
+import PasskeyConnector from "./passkey/connector";
 import EvmConnector, { EvmConnectorOptions } from "./evm/connector";
 import SolanaConnector, { SolanaConnectorOptions } from "./solana/connector";
 import StellarConnector from "./stellar/connector";
@@ -18,17 +19,25 @@ export const stellar = () => new StellarConnector();
 export const ton = () => new TonConnector();
 export const passkey = () => new PasskeyConnector();
 
+interface HotConnectorOptions extends EvmConnectorOptions, SolanaConnectorOptions {
+  webWallet?: string;
+  enableGoogle?: boolean;
+  connectors?: OmniConnector[];
+}
+
+export const GlobalSettings = {
+  webWallet: "https://app.hot-labs.org",
+};
+
 export class HotConnector {
   public enableGoogle: boolean = false;
   public connectors: OmniConnector[] = [];
-  private events = new EventEmitter<{
-    connect: { wallet: OmniWallet };
-    disconnect: { wallet: OmniWallet };
-  }>();
+  private events = new EventEmitter<{ connect: { wallet: OmniWallet }; disconnect: { wallet: OmniWallet } }>();
 
-  constructor(options?: { enableGoogle?: boolean; connectors?: OmniConnector[] } & EvmConnectorOptions & SolanaConnectorOptions) {
+  constructor(options?: HotConnectorOptions) {
     this.enableGoogle = options?.enableGoogle ?? false;
     this.connectors = options?.connectors || [near(), evm(options), solana(options), stellar(), ton()];
+    GlobalSettings.webWallet = options?.webWallet ?? GlobalSettings.webWallet;
 
     this.connectors.forEach((t) => {
       t.onConnect((payload) => this.events.emit("connect", payload));
@@ -63,46 +72,10 @@ export class HotConnector {
   }
 
   async connectGoogle() {
-    // TODO: Implement this
-    if ("hotExtension" in window && (window.hotExtension as any).connect) {
-      const hotExtension = window.hotExtension as any;
-      const accounts = await hotExtension.connect({ type: "google" });
-      console.log("accounts", accounts);
-      return;
-    }
-
-    const width = 480;
-    const height = 640;
-    const wallet = "http://localhost:1234";
-    const x = (window.screen.width - width) / 2;
-    const y = (window.screen.height - height) / 2;
-    const popup = window.open(`${wallet}?startapp=connect-google`, "_blank", `popup=1,width=${width},height=${height},top=${y},left=${x}`);
-
-    return new Promise<void>(async (resolve, reject) => {
-      const interval = setInterval(() => {
-        if (!popup?.closed) return;
-        clearInterval(interval);
-        reject(new Error("User rejected"));
-      }, 100);
-
-      window.addEventListener("message", (event) => {
-        if (event.origin !== wallet) return;
-        if (event.data.type === "google-rejected") {
-          clearInterval(interval);
-          reject(new Error("User rejected"));
-        }
-
-        if (event.data.type === "google-connected") {
-          event.data.accounts.forEach((account: { type: number; address: string; publicKey: string }) => {
-            const connector = this.connectors.find((t) => t.type === account.type);
-            if (connector) connector.connectWebWallet(account.address, account.publicKey);
-          });
-
-          resolve();
-          clearInterval(interval);
-          popup?.close();
-        }
-      });
+    const accounts = await requestWebWallet()("connect:google", {});
+    accounts.forEach((account: { type: number; address: string; publicKey: string }) => {
+      const connector = this.connectors.find((t) => t.type === account.type);
+      if (connector) connector.connectWebWallet(account.address, account.publicKey);
     });
   }
 
@@ -111,10 +84,9 @@ export class HotConnector {
 
     return new Promise<void>(async (resolve, reject) => {
       const list = () => this.connectors.map((t) => ({ address: t.wallet?.address, name: t.name, icon: t.icon, id: t.id }));
+
       const connectGoogle = async () => {
         await this.connectGoogle();
-        popup.update({ wallets: list() });
-        await new Promise((resolve) => setTimeout(resolve, 400));
         popup.destroy();
         resolve();
       };

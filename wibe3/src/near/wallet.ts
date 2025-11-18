@@ -21,17 +21,14 @@ type Account = {
 type Network = "mainnet" | "testnet";
 
 export default class NearWallet extends OmniWallet {
-  readonly address: string;
-  readonly publicKey?: string;
-  readonly omniAddress: string;
-  readonly type: WalletType;
+  readonly type = WalletType.NEAR;
 
-  constructor(readonly connector: NearConnector, address: string, readonly wallet: NearWalletBase) {
+  constructor(readonly connector: NearConnector, readonly address: string, readonly publicKey: string, readonly wallet: NearWalletBase) {
     super(connector);
+  }
 
-    this.address = address;
-    this.omniAddress = this.address;
-    this.type = WalletType.NEAR;
+  get omniAddress() {
+    return this.address;
   }
 
   get manifest() {
@@ -48,10 +45,6 @@ export default class NearWallet extends OmniWallet {
 
   async signOut(data?: { network?: Network }): Promise<void> {
     return this.wallet.signOut(data);
-  }
-
-  async getAccounts(data?: { network?: Network }): Promise<Array<Account>> {
-    return this.wallet.getAccounts(data);
   }
 
   async signAndSendTransaction(params: SignAndSendTransactionParams): Promise<FinalExecutionOutcome> {

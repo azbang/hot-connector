@@ -1,23 +1,21 @@
 import { sep43Modules, HotWalletModule, StellarWalletsKit, WalletNetwork, ISupportedWallet } from "@creit.tech/stellar-wallets-kit";
 
-import { LocalStorage } from "../storage";
 import { WalletType } from "../OmniWallet";
 import { OmniConnector } from "../OmniConnector";
 import { WalletsPopup } from "../popups/WalletsPopup";
+import { requestWebWallet } from "../injected/wallet";
 import { isInjected } from "../injected/hot";
 import StellarWallet from "./wallet";
 
 class StellarConnector extends OmniConnector<StellarWallet> {
-  storage = new LocalStorage();
   stellarKit: StellarWalletsKit;
+  wallets: ISupportedWallet[] = [];
 
   type = WalletType.STELLAR;
   name = "Stellar Wallet";
   icon = "https://storage.herewallet.app/upload/1469894e53ca248ac6adceb2194e6950a13a52d972beb378a20bce7815ba01a4.png";
   isSupported = true;
-  id = "stellarkit";
-
-  wallets: ISupportedWallet[] = [];
+  id = "stellar";
 
   constructor(stellarKit?: StellarWalletsKit) {
     super();
@@ -30,14 +28,16 @@ class StellarConnector extends OmniConnector<StellarWallet> {
     });
 
     this.getConnectedWallet().then((data) => {
-      try {
-        if (!data || !this.stellarKit) throw "No wallet";
-        const { id, address } = JSON.parse(data);
-        this.stellarKit.setWallet(id);
-        this.setWallet(new StellarWallet(this, address));
-      } catch {
-        this.removeWallet();
+      if (!data || !this.stellarKit) throw "No wallet";
+
+      if (data.type === "web" && data.address) {
+        this.connectWebWallet(data.address);
+        return;
       }
+
+      this.stellarKit.setWallet(data.id!);
+      const signMessage = async (message: string) => this.stellarKit.signMessage(message);
+      this.setWallet(new StellarWallet(this, { address: data.address!, signMessage }));
     });
   }
 
@@ -45,15 +45,17 @@ class StellarConnector extends OmniConnector<StellarWallet> {
     if (isInjected()) {
       this.stellarKit.setWallet("hot-wallet");
       const { address } = await this.stellarKit?.getAddress();
-      return JSON.stringify({ id: "hot-wallet", address });
+      return { type: "wallet", id: "hot-wallet", address };
     }
 
-    return await this.storage.get("hot-connector:stellar");
+    return await this.getStorage();
   }
 
   connectWebWallet(address: string) {
-    this.setWallet(new StellarWallet(this, address));
-    this.storage.set("hot-connector:stellar", JSON.stringify({ id: "hot-wallet", address }));
+    const request = requestWebWallet(this.type, address);
+    const signMessage = async (message: string) => request("stellar:signMessage", { message });
+    this.setWallet(new StellarWallet(this, { address, signMessage }));
+    this.setStorage({ type: "web", address });
   }
 
   async connect() {
@@ -65,8 +67,9 @@ class StellarConnector extends OmniConnector<StellarWallet> {
         onConnect: async (id: string) => {
           this.stellarKit.setWallet(id);
           const { address } = await this.stellarKit?.getAddress();
-          this.setWallet(new StellarWallet(this, address));
-          this.storage.set("hot-connector:stellar", JSON.stringify({ id, address }));
+          const signMessage = async (message: string) => this.stellarKit.signMessage(message);
+          this.setWallet(new StellarWallet(this, { address, signMessage }));
+          this.setStorage({ type: "wallet", id, address });
           popup.destroy();
           resolve();
         },
@@ -77,7 +80,7 @@ class StellarConnector extends OmniConnector<StellarWallet> {
   }
 
   async silentDisconnect() {
-    this.storage.remove("hot-connector:stellar");
+    this.removeStorage();
     this.stellarKit.disconnect();
   }
 }

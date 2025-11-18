@@ -1,11 +1,11 @@
 import UniversalProvider from "@walletconnect/universal-provider";
 
 import { isInjected } from "../injected/hot";
+import { requestWebWallet } from "../injected/wallet";
 import { WalletConnectPopup } from "../popups/WalletConnectPopup";
 import { WalletsPopup } from "../popups/WalletsPopup";
 import { OmniConnector } from "../OmniConnector";
 import { WalletType } from "../OmniWallet";
-import { LocalStorage } from "../storage";
 import EvmAccount from "./wallet";
 
 export interface EvmConnectorOptions {
@@ -22,8 +22,6 @@ export interface EvmConnectorOptions {
 const chains = [1, 10, 56, 137, 8453, 42161, 421613, 80001];
 
 class EvmConnector extends OmniConnector<EvmAccount> {
-  storage = new LocalStorage();
-
   name = "EVM Wallet";
   icon = "https://storage.herewallet.app/upload/06b43b164683c2cbfe9a9c0699f0953fd56f1f802035e7701ea10501d9e091c6.png";
   type = WalletType.EVM;
@@ -55,9 +53,9 @@ class EvmConnector extends OmniConnector<EvmAccount> {
         });
 
         const connected = await this.getConnectedWallet();
-        if (connected === "walletconnect") {
+        if (connected.type === "walletconnect") {
           const address = provider.session?.namespaces.eip155?.accounts?.[0]?.split(":")[2];
-          if (address) this.setWallet(new EvmAccount(this, address, provider));
+          if (address) this.setWallet(new EvmAccount(this, { address, request: (t) => provider.request(t) }));
         }
       });
     }
@@ -71,27 +69,34 @@ class EvmConnector extends OmniConnector<EvmAccount> {
       this._popup?.update({ wallets: this.wallets.map((t) => t.info) });
 
       const connected = await this.getConnectedWallet();
-      if (connected === provider.detail.info.rdns) {
+      if (connected.type === "wallet" && connected.id === provider.detail.info.rdns) {
         try {
           const [address] = await provider.detail.provider.request({ method: "eth_requestAccounts" });
-          if (address) this.setWallet(new EvmAccount(this, address, provider.detail.provider));
+          const request = (t: any) => provider.detail.provider.request(t);
+          if (address) this.setWallet(new EvmAccount(this, { address, request }));
         } catch (e) {
-          console.log("error", e);
-          this.storage.remove("evm:connected");
+          this.removeStorage();
         }
       }
+    });
+
+    this.getStorage().then((data) => {
+      if (data.type !== "web" || !data.address) return;
+      this.connectWebWallet(data.address);
     });
 
     window.dispatchEvent(new Event("eip6963:requestProvider"));
   }
 
   connectWebWallet(address: string) {
-    this.setWallet(new EvmAccount(this, address, {} as any));
+    this.setStorage({ type: "web", address });
+    const request = requestWebWallet(this.type, address);
+    this.setWallet(new EvmAccount(this, { address, request: (args) => request("evm:request", args) }));
   }
 
   async getConnectedWallet() {
-    if (isInjected()) return "org.hot-labs";
-    return await this.storage.get("evm:connected");
+    if (isInjected()) return { type: "wallet", id: "org.hot-labs" };
+    return await this.getStorage();
   }
 
   async connectWalletConnect() {
@@ -128,8 +133,9 @@ class EvmConnector extends OmniConnector<EvmAccount> {
       const address = session?.namespaces.eip155?.accounts?.[0]?.split(":")[2];
       if (!address) return reject();
 
-      this.setWallet(new EvmAccount(this, address, provider!));
-      this.storage.set("evm:connected", "walletconnect");
+      const request = (t: any) => provider!.request(t);
+      this.setWallet(new EvmAccount(this, { address, request }));
+      this.setStorage({ type: "walletconnect" });
       this._popup?.destroy();
       resolve();
     });
@@ -167,13 +173,15 @@ class EvmConnector extends OmniConnector<EvmAccount> {
           try {
             const [address] = await wallet.provider.request({ method: "eth_requestAccounts" });
             if (!address) throw "No address found";
-            this.storage.set("evm:connected", wallet.info.rdns);
-            this.setWallet(new EvmAccount(this, address, provider!));
+            this.setStorage({ type: "wallet", id: wallet.info.rdns });
+
+            const request = (t: any) => provider!.request(t);
+            this.setWallet(new EvmAccount(this, { address, request }));
             this._popup?.destroy();
             this._popup = null;
             resolve();
           } catch (e) {
-            this.storage.remove("evm:connected");
+            this.removeStorage();
             this._popup?.destroy();
             this._popup = null;
             reject(e);
@@ -186,7 +194,7 @@ class EvmConnector extends OmniConnector<EvmAccount> {
   }
 
   async silentDisconnect() {
-    this.storage.remove("evm:connected");
+    this.removeStorage();
     const provider = await this.provider;
     provider?.disconnect();
   }

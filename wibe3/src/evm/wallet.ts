@@ -1,15 +1,24 @@
-import UniversalProvider from "@walletconnect/universal-provider";
 import { base64, base58, hex } from "@scure/base";
+import { BrowserProvider, JsonRpcSigner, TransactionRequest } from "ethers";
 
 import { OmniWallet, WalletType } from "../OmniWallet";
 import EvmConnector from "./connector";
+
+interface EvmProvider {
+  address: string;
+  request: (args: any) => Promise<any>;
+}
 
 class EvmWallet extends OmniWallet {
   readonly publicKey?: string;
   readonly type = WalletType.EVM;
 
-  constructor(readonly connector: EvmConnector, readonly address: string, readonly provider: UniversalProvider) {
+  constructor(readonly connector: EvmConnector, readonly provider: EvmProvider) {
     super(connector);
+  }
+
+  get address() {
+    return this.provider.address;
   }
 
   get omniAddress() {
@@ -42,8 +51,13 @@ class EvmWallet extends OmniWallet {
     return hex.decode(result.slice(2, -2) + (isZero ? "00" : "01"));
   }
 
-  async sendTransaction(tx: string) {
-    return await this.provider.request({ method: "eth_sendTransaction", params: [tx] });
+  async sendTransaction(chain: number, request: TransactionRequest): Promise<string> {
+    const provider = new BrowserProvider(this.provider);
+    const signer = new JsonRpcSigner(provider, this.address);
+
+    await this.provider.request({ method: "wallet_switchEthereumChain", params: [{ chainId: `0x${chain.toString(16)}` }] });
+    const tx = await signer.sendTransaction(request);
+    return tx.hash;
   }
 
   async signIntents(intents: Record<string, any>[], options?: { deadline?: number; nonce?: Uint8Array }): Promise<Record<string, any>> {

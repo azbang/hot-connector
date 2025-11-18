@@ -3,12 +3,20 @@ import { base64, base58, hex, base32 } from "@scure/base";
 import { OmniWallet, WalletType } from "../OmniWallet";
 import StellarConnector from "./connector";
 
+interface ProtocolWallet {
+  address: string;
+  signMessage: (message: string) => Promise<{ signedMessage: string }>;
+}
+
 class StellarWallet extends OmniWallet {
   readonly type = WalletType.STELLAR;
 
-  constructor(readonly connector: StellarConnector, readonly address: string) {
+  constructor(readonly connector: StellarConnector, readonly wallet: ProtocolWallet) {
     super(connector);
-    this.address = address;
+  }
+
+  get address() {
+    return this.wallet.address;
   }
 
   get publicKey() {
@@ -36,7 +44,7 @@ class StellarWallet extends OmniWallet {
   }
 
   async signMessage(message: string) {
-    return await this.connector.stellarKit.signMessage(message);
+    return await this.wallet.signMessage(message);
   }
 
   async signIntents(intents: Record<string, any>[], options?: { deadline?: number; nonce?: Uint8Array }): Promise<Record<string, any>> {

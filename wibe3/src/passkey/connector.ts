@@ -1,6 +1,5 @@
 import { base58 } from "@scure/base";
 
-import { LocalStorage } from "../storage";
 import { OmniConnector } from "../OmniConnector";
 import { PasskeyPopup } from "../popups/PasskeyPopup";
 import { WalletType } from "../OmniWallet";
@@ -9,8 +8,6 @@ import { createNew, getRelayingPartyId } from "./service";
 import PasskeyWallet from "./wallet";
 
 class PasskeyConnector extends OmniConnector<PasskeyWallet> {
-  storage = new LocalStorage();
-
   icon = "https://near-intents.org/static/icons/wallets/webauthn.svg";
   type = WalletType.PASSKEY;
   name = "Passkey";
@@ -19,8 +16,8 @@ class PasskeyConnector extends OmniConnector<PasskeyWallet> {
   constructor() {
     super();
 
-    this.storage.get("passkey:connected").then((data) => {
-      if (data) this.setWallet(new PasskeyWallet(this, JSON.parse(data)));
+    this.getStorage().then((data: any) => {
+      if (data) this.setWallet(new PasskeyWallet(this, data));
     });
   }
 
@@ -41,7 +38,7 @@ class PasskeyConnector extends OmniConnector<PasskeyWallet> {
       if (!response.ok) throw new Error("Failed to create new passkey");
     });
 
-    this.storage.set("passkey:connected", JSON.stringify(credential));
+    this.setStorage(credential);
     const wallet = new PasskeyWallet(this, credential);
     this.setWallet(wallet);
     return wallet;
@@ -56,7 +53,7 @@ class PasskeyConnector extends OmniConnector<PasskeyWallet> {
       if (!response.ok) throw new Error("Failed to get passkey public key");
 
       const { public_key } = await response.json();
-      this.storage.set("passkey:connected", JSON.stringify({ public_key: public_key, raw_id: rawId }));
+      this.setStorage({ public_key: public_key, raw_id: rawId } as any);
       const wallet = new PasskeyWallet(this, { publicKey: public_key, rawId });
       this.setWallet(wallet);
       return wallet;
@@ -96,7 +93,7 @@ class PasskeyConnector extends OmniConnector<PasskeyWallet> {
   }
 
   async silentDisconnect() {
-    this.storage.remove("passkey:connected");
+    this.removeStorage();
   }
 
   async retryOperation<T>(operation: () => Promise<T>, maxRetries = 10, delay = 1000): Promise<T> {
