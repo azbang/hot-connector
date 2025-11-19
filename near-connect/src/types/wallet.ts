@@ -97,13 +97,22 @@ export interface WalletFeatures {
   testnet: boolean;
 }
 
+export interface SignInParams {
+  network?: Network;
+  contractId?: string;
+  methodNames?: string[];
+}
+
 export interface NearWalletBase {
   manifest: WalletManifest;
 
   /**
    * Programmatically sign in. Hardware wallets (e.g. Ledger) require `derivationPaths` to validate access key permissions.
+   * @param data.network - Network to connect to (mainnet or testnet)
+   * @param data.contractId - Optional contract ID to create a function access key for
+   * @param data.methodNames - Optional method names allowed for the function access key
    */
-  signIn(data?: { network?: Network }): Promise<Array<Account>>;
+  signIn(data?: SignInParams): Promise<Array<Account>>;
   /**
    * Sign out from the wallet.
    */
