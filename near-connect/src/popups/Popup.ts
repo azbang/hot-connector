@@ -1,7 +1,7 @@
 import { css } from "./styles";
 import { html } from "../helpers/html";
 
-const ID = Math.random().toString(36).substring(2, 15);
+const ID = `n${Math.random().toString(36).substring(2, 15)}`;
 
 if (typeof document !== "undefined") {
   const style = document.createElement("style");

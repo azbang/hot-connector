@@ -1,3 +1,8 @@
+# 0.6.10
+
+- Fix SSR issues
+- Fix random class name
+
 # 0.6.9
 
 - Fix SSR issues
