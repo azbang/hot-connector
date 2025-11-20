@@ -180,10 +180,9 @@ export const initNearMobileWallet = async () => {
   }
 
   return {
-    async signIn(data: { network: Network; contractId: string }) {
+    async signIn(data: { network: Network }) {
       window.selector.ui.showIframe();
-      const contractId = data.contractId !== "" ? data.contractId : undefined;
-      await wallet[data.network].signIn({ ...data, contractId: contractId });
+      await wallet[data.network].signIn({ contractId: "" });
       return await getAccounts(data.network);
     },
 

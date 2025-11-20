@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "@creit.tech/stellar-wallets-kit": "^1.7.7",
-    "@hot-labs/near-connect": "^0.6.9",
+    "@hot-labs/near-connect": "^0.6.10",
     "@hot-labs/wibe3": "^0.4.8",
     "@walletconnect/sign-client": "^2.22.4",
     "react": "^18.3.1",

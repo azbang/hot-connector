@@ -17,8 +17,5 @@
     "jsxImportSource": "preact",
     "resolveJsonModule": true
   },
-  "paths": {
-    "@common/*": ["../common/*"]
-  },
-  "include": ["../common/**/*", "./src/**/*"]
+  "include": ["./src/**/*"]
 }

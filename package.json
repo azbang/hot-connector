@@ -18,7 +18,9 @@
     "build/*"
   ],
   "scripts": {
-    "build": "rm -rf build && yarn tsc"
+    "build:wallets": "cd near-wallets && yarn build:wallets",
+    "build": "rm -rf build && yarn tsc",
+    "cdn": "vite build"
   },
   "peerDependencies": {
     "@walletconnect/sign-client": "^2.21.8"

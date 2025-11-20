@@ -10,5 +10,8 @@ export default defineConfig({
       formats: ["es", "cjs", "iife"],
       fileName: (format) => `hot-connect.${format}.js`,
     },
+    rollupOptions: {
+      external: ["@walletconnect/sign-client"],
+    },
   },
 });
