@@ -1,6 +1,7 @@
 import { useLocalStorage } from "usehooks-ts";
 import { FinalExecutionOutcome } from "@near-js/types";
 import { parseNearAmount } from "@near-js/utils";
+import { actionCreators } from "@near-wallet-selector/core";
 
 import { IPropsWalletAction } from "./wallet-action.types.ts";
 import { FinalOutcome } from "./FinalOutcome.tsx";
@@ -12,9 +13,9 @@ export const SendTx = ({ wallet, network }: IPropsWalletAction) => {
 
   const sendTx = async () => {
     setLastResult(undefined);
-
+    const action = actionCreators.transfer(BigInt(+amount * 10 ** 24) ?? "0");
     const result = await wallet.signAndSendTransaction({
-      actions: [{ type: "Transfer", params: { deposit: parseNearAmount(amount) ?? "0" } }],
+      actions: [action],
       receiverId,
     });
 
