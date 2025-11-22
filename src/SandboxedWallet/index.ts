@@ -19,8 +19,9 @@ export class SandboxWallet {
   }
 
   async signIn(data?: { network?: Network }): Promise<Array<Account>> {
-    const network = data?.network || this.connector.network;
-    return this.executor.call("wallet:signIn", { network });
+  	//Pass the parameters so accessKeys can be created
+    const args = { ...data, network: data?.network || this.connector.network };
+    return this.executor.call("wallet:signIn", args); 
   }
 
   async signOut(data?: { network?: Network }): Promise<void> {
