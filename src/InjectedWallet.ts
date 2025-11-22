@@ -18,8 +18,8 @@ export class InjectedWallet {
   }
 
   async signIn(data?: { network?: Network }): Promise<Array<Account>> {
-    const network = data?.network || this.connector.network;
-    return this.wallet.signIn({ network });
+  	const args = { ...data, network: data?.network || this.connector.network };
+    return this.wallet.signIn(args);
   }
 
   async signOut(data?: { network?: Network }): Promise<void> {
