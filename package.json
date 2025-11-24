@@ -1,6 +1,6 @@
 {
   "name": "@hot-labs/near-connect",
-  "version": "0.6.10",
+  "version": "0.6.11",
   "type": "commonjs",
   "main": "./build/index.js",
   "types": "./build/index.d.ts",

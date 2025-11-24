@@ -1,6 +1,9 @@
-import { isCurrentBrowserSupported, SignedTransaction } from "@near-wallet-selector/core";
-import type { FunctionCallAction, InternalAction } from "@near-wallet-selector/core";
-import { NearRpc } from "./rpc";
+import { SignedTransaction } from "@near-js/transactions";
+import { isCurrentBrowserSupported } from "./utils/detectBrowser";
+import { NearRpc } from "./utils/rpc";
+
+type InternalAction = any;
+type FunctionCallAction = any;
 
 const checkExist = async () => {
   try {

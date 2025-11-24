@@ -18,9 +18,12 @@ export class SandboxWallet {
     this.executor = new SandboxExecutor(connector, manifest);
   }
 
-  async signIn(data?: { network?: Network }): Promise<Array<Account>> {
-    const network = data?.network || this.connector.network;
-    return this.executor.call("wallet:signIn", { network });
+  async signIn(data?: { network?: Network; contractId?: string; methodNames?: Array<string> }): Promise<Array<Account>> {
+    return this.executor.call("wallet:signIn", {
+      network: data?.network || this.connector.network,
+      contractId: data?.contractId,
+      methodNames: data?.methodNames,
+    });
   }
 
   async signOut(data?: { network?: Network }): Promise<void> {

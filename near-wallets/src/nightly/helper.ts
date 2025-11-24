@@ -1,13 +1,13 @@
 import type { Signer } from "@near-js/signers";
 import { JsonRpcProvider } from "@near-js/providers";
-import type { Network, Transaction } from "@near-wallet-selector/core";
 import type { AccessKeyViewRaw, FinalExecutionOutcome } from "@near-js/types";
-import { KeyType, PublicKey } from "@near-js/crypto";
 import type { Transaction as NearTransaction } from "@near-js/transactions";
 import { createTransaction } from "@near-js/transactions";
 import { baseDecode } from "@near-js/utils";
+import { PublicKey } from "@near-js/crypto";
+import { createAction } from "../utils/action";
 
-export const createTransactions = async (transactions: Array<Transaction>, signer: Signer, network: Network): Promise<NearTransaction[]> => {
+export const createTransactions = async (transactions: Array<any>, signer: Signer, network: any): Promise<NearTransaction[]> => {
   const nearTransactions: NearTransaction[] = [];
   const provider = new JsonRpcProvider({
     url: network.nodeUrl,
@@ -30,7 +30,7 @@ export const createTransactions = async (transactions: Array<Transaction>, signe
       PublicKey.from(publicKey.toString()),
       transactions[i].receiverId,
       accessKey.nonce + i + 1,
-      transactions[i].actions,
+      transactions[i].actions.map((action: any) => createAction(action)),
       baseDecode(block.header.hash)
     );
     console.log(transaction);
@@ -39,11 +39,7 @@ export const createTransactions = async (transactions: Array<Transaction>, signe
   return nearTransactions;
 };
 
-export const signAndSendTransactionsHandler = async (
-  transactions: Array<Transaction>,
-  signer: Signer,
-  network: Network
-): Promise<Array<FinalExecutionOutcome>> => {
+export const signAndSendTransactionsHandler = async (transactions: Array<any>, signer: Signer, network: any): Promise<Array<FinalExecutionOutcome>> => {
   const nearTxs = await createTransactions(transactions, signer, network);
   const results: Array<FinalExecutionOutcome> = [];
   for (const tx of nearTxs) {

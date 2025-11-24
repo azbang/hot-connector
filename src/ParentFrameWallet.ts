@@ -31,9 +31,13 @@ export class ParentFrameWallet {
     });
   }
 
-  async signIn(data?: { network?: Network }): Promise<Array<Account>> {
-    const network = data?.network || this.connector.network;
-    const result = await this.callParentFrame("near:signIn", { network });
+  async signIn(data?: { network?: Network; contractId?: string; methodNames?: Array<string> }): Promise<Array<Account>> {
+    const result = await this.callParentFrame("near:signIn", {
+      network: data?.network || this.connector.network,
+      contractId: data?.contractId,
+      methodNames: data?.methodNames,
+    });
+
     if (Array.isArray(result)) return result;
     return [result as Account];
   }

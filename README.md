@@ -48,6 +48,14 @@ connector.on("wallet:signIn", async (t) => {
 });
 ```
 
+## SignIn with limited key
+
+```ts
+new NearConnector({ signIn: { contractId: "game.near", methods: ["action"] } });
+```
+
+Some wallets allow adding a limited-access key to a contract as soon as the user connects their wallet. This enables the app to sign non-payable transactions without requiring wallet approval each time. However, this approach requires the user to submit an on-chain transaction during the initial connection, which may negatively affect the user experience. A better practice is to add the limited-access key after the user has already begun actively interacting with your application.
+
 ## Wallet integration
 
 The developer writes a self-hosted script that implements the integration of their wallet and adds a description to the common [manifest](./repository/manifest.json):

@@ -1,17 +1,12 @@
-import type { Account, Network } from "@near-wallet-selector/core";
-import { base_encode } from "near-api-js/lib/utils/serialize.js";
-import { signTransactions } from "@near-wallet-selector/wallet-utils";
-import type { FinalExecutionOutcome } from "near-api-js/lib/providers/index.js";
-import type { Signer } from "near-api-js";
-import * as nearAPI from "near-api-js";
-import { signAndSendTransactionsHandler } from "./nightly/helper";
-import { PublicKey } from "near-api-js/lib/utils";
+import { signTransaction } from "@near-js/transactions";
+import { PublicKey } from "@near-js/crypto";
+import { baseEncode } from "@near-js/utils";
+import { Signer } from "@near-js/signers";
 
-const provider = new nearAPI.providers.JsonRpcProvider({
-  url: "https://relmn.aurora.dev",
-});
+import { signTransactions } from "../utils/wallet";
+import { signAndSendTransactionsHandler } from "./helper";
 
-const networks: Record<string, Network> = {
+const networks: Record<string, any> = {
   mainnet: {
     nodeUrl: "https://relmn.aurora.dev",
     networkId: "mainnet",
@@ -40,10 +35,10 @@ const checkExist = async () => {
 const Nightly = async () => {
   await window.selector.external("nightly.near", "connect").catch(() => {});
 
-  const getAccounts = async (): Promise<Array<Account>> => {
+  const getAccounts = async (): Promise<Array<{ accountId: string; publicKey: string }>> => {
     const { accountId, publicKey } = await window.selector.external("nightly.near", "account");
     if (!accountId) return [];
-    return [{ accountId, publicKey: `ed25519:${base_encode(publicKey.ed25519Key!.data)}` }];
+    return [{ accountId, publicKey: `ed25519:${baseEncode(publicKey.data)}` }];
   };
 
   const signer: Signer = {
@@ -55,7 +50,7 @@ const Nightly = async () => {
       const accounts = await getAccounts();
       const account = accounts.find((a) => a.accountId === accountId);
       if (!account) throw new Error("Failed to find public key for account");
-      return nearAPI.utils.PublicKey.from(account.publicKey!);
+      return PublicKey.from(account.publicKey!);
     },
 
     signMessage: async (message, accountId) => {
@@ -72,11 +67,11 @@ const Nightly = async () => {
   };
 
   return {
-    async signIn() {
+    async signIn({ contractId, methodNames }: { contractId?: string; methodNames?: Array<string> }) {
       await checkExist();
       const existingAccounts = await getAccounts();
       if (existingAccounts.length) return existingAccounts;
-      await window.selector.external("nightly.near", "connect");
+      await window.selector.external("nightly.near", "connect", { contractId, methodNames });
       return getAccounts();
     },
 
@@ -134,28 +129,14 @@ const Nightly = async () => {
 
     async signTransaction({ transaction, network }: any) {
       await checkExist();
-      return await nearAPI.transactions.signTransaction(transaction, signer, transaction.signerId, networks[network].networkId);
+      return await signTransaction(transaction, signer, transaction.signerId, networks[network].networkId);
     },
 
     async getPublicKey() {
       const accounts = await getAccounts();
       const account = accounts[0];
       if (!account) throw new Error("Failed to find public key for account");
-      return nearAPI.utils.PublicKey.from(account.publicKey!);
-    },
-
-    async signNep413Message(message, accountId, recipient, nonce, callbackUrl) {
-      const result = await signer.signMessage({
-        message,
-        nonce: Buffer.from(nonce),
-        recipient,
-        callbackUrl,
-      });
-      return {
-        ...result,
-        publicKey: PublicKey.fromString(result.publicKey),
-        signature: Buffer.from(result.signature, "base64"),
-      };
+      return PublicKey.from(account.publicKey!);
     },
 
     async signDelegateAction(delegateAction: any) {

@@ -25,6 +25,15 @@ interface NearConnectorOptions {
   events?: EventEmitter<EventMap>;
   storage?: DataStorage;
   logger?: Logger;
+
+  /**
+   * @deprecated
+   * Some wallets allow adding a limited-access key to a contract as soon as the user connects their wallet.
+   * This enables the app to sign non-payable transactions without requiring wallet approval each time.
+   * However, this approach requires the user to submit an on-chain transaction during the initial connection, which may negatively affect the user experience.
+   * A better practice is to add the limited-access key after the user has already begun actively interacting with your application.
+   */
+  signIn?: { contractId?: string; methodNames?: Array<string> };
 }
 
 const defaultManifests = [
@@ -45,6 +54,7 @@ export class NearConnector {
 
   providers: { mainnet?: string[]; testnet?: string[] } = { mainnet: [], testnet: [] };
   walletConnect?: { projectId: string; metadata: any };
+  signInData?: { contractId?: string; methodNames?: Array<string> };
 
   excludedWallets: string[] = [];
   autoConnect?: boolean;
@@ -68,6 +78,7 @@ export class NearConnector {
 
     this.excludedWallets = options?.excludedWallets ?? [];
     this.features = options?.features ?? {};
+    this.signInData = options?.signIn;
 
     this.whenManifestLoaded = new Promise(async (resolve) => {
       if (options?.manifest == null || typeof options.manifest === "string") {
@@ -189,8 +200,10 @@ export class NearConnector {
     }
   }
 
-  async switchNetwork(network: "mainnet" | "testnet") {
+  async switchNetwork(network: "mainnet" | "testnet", signInData?: { contractId?: string; methodNames?: Array<string> }) {
+    if (this.network === network) return;
     await this.disconnect().catch(() => {});
+    if (signInData) this.signInData = signInData;
     this.network = network;
     await this.connect();
   }
@@ -257,7 +270,12 @@ export class NearConnector {
       await this.storage.set("selected-wallet", id);
       this.logger?.log(`Set preferred wallet, try to signIn`, id);
 
-      const accounts = await wallet.signIn();
+      const accounts = await wallet.signIn({
+        contractId: this.signInData?.contractId,
+        methodNames: this.signInData?.methodNames,
+        network: this.network,
+      });
+
       if (!accounts?.length) throw new Error("Failed to sign in");
 
       await this.disconnectIfBanned(wallet, accounts);
