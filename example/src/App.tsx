@@ -1,4 +1,4 @@
-import { FC, useState } from "react";
+import { FC, useMemo, useState } from "react";
 
 import { NearConnector, NearWalletBase } from "@hot-labs/near-connect";
 
@@ -9,6 +9,10 @@ export const ExampleNEAR: FC = () => {
   const [network, setNetwork] = useState<"testnet" | "mainnet">("mainnet");
   const [account, _setAccount] = useState<{ id: string; network: "testnet" | "mainnet" }>();
   const [wallet, setWallet] = useState<NearWalletBase | undefined>();
+
+  const logger = {
+    log: (args: any) => console.log(args),
+  };
 
   function setAccount(account: { accountId: string } | undefined) {
     if (account == null) return _setAccount(undefined);
@@ -30,6 +34,7 @@ export const ExampleNEAR: FC = () => {
           icons: ["/favicon.ico"],
         },
       },
+      logger,
     });
 
     connector.on("wallet:signIn", async (t) => {
@@ -52,7 +57,8 @@ export const ExampleNEAR: FC = () => {
     return connector;
   });
 
-  const networkAccount = account != null && account.network === network ? account : undefined;
+  const networkAccount = useMemo(() => (account != null && account.network === network ? account : undefined), [account, network]);
+
   const connect = async () => {
     if (networkAccount != null) return connector.disconnect();
     await connector.connect();

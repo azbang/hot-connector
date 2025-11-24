@@ -23,7 +23,7 @@
   "devDependencies": {
     "@here-wallet/core": "^3.4.0",
     "@meteorwallet/sdk": "1.0.9",
-    "@near-wallet-selector/core": "^10.0.0",
+    "@near-wallet-selector/core": "10.1.1",
     "@near-wallet-selector/ledger": "^8.10.1",
     "@near-wallet-selector/modal-ui-js": "^8.9.12",
     "@noble/hashes": "^1.4.0",
@@ -36,5 +36,8 @@
     "typescript": "^5.2.2",
     "vite": "^5.3.4",
     "vite-plugin-node-polyfills": "^0.24.0"
+  },
+  "resolutions": {
+    "@near-wallet-selector/core": "10.1.1"
   }
 }

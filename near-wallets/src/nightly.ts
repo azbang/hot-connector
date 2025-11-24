@@ -4,6 +4,8 @@ import { signTransactions } from "@near-wallet-selector/wallet-utils";
 import type { FinalExecutionOutcome } from "near-api-js/lib/providers/index.js";
 import type { Signer } from "near-api-js";
 import * as nearAPI from "near-api-js";
+import { signAndSendTransactionsHandler } from "./nightly/helper";
+import { PublicKey } from "near-api-js/lib/utils";
 
 const provider = new nearAPI.providers.JsonRpcProvider({
   url: "https://relmn.aurora.dev",
@@ -18,7 +20,7 @@ const networks: Record<string, Network> = {
     indexerUrl: "",
   },
   testnet: {
-    nodeUrl: "https://rpc.testnet.near.org",
+    nodeUrl: "https://test.rpc.fastnear.com",
     networkId: "testnet",
     helperUrl: "",
     explorerUrl: "",
@@ -41,7 +43,7 @@ const Nightly = async () => {
   const getAccounts = async (): Promise<Array<Account>> => {
     const { accountId, publicKey } = await window.selector.external("nightly.near", "account");
     if (!accountId) return [];
-    return [{ accountId, publicKey: `ed25519:${base_encode(publicKey.data)}` }];
+    return [{ accountId, publicKey: `ed25519:${base_encode(publicKey.ed25519Key!.data)}` }];
   };
 
   const signer: Signer = {
@@ -107,9 +109,9 @@ const Nightly = async () => {
       await checkExist();
       const accounts = await getAccounts();
       if (!accounts.length) throw new Error("Wallet not signed in");
+
       const signerId = accounts[0].accountId;
-      const [signedTx] = await signTransactions([{ signerId, receiverId, actions }], signer, networks[network]);
-      return provider.sendTransaction(signedTx);
+      return (await signAndSendTransactionsHandler([{ signerId, receiverId, actions }], signer, networks[network]))[0];
     },
 
     async signAndSendTransactions({ transactions, network }: { transactions: any; network: string }) {
@@ -118,18 +120,7 @@ const Nightly = async () => {
       if (!accounts.length) throw new Error("Wallet not signed in");
       const signerId = accounts[0].accountId;
 
-      const signedTxs = await signTransactions(
-        transactions.map((x: any) => ({ ...x, signerId })),
-        signer,
-        networks[network]
-      );
-
-      const results: Array<FinalExecutionOutcome> = [];
-      for (let i = 0; i < signedTxs.length; i++) {
-        results.push(await provider.sendTransaction(signedTxs[i]));
-      }
-
-      return results;
+      return await signAndSendTransactionsHandler(transactions, signer, networks[network]);
     },
 
     async createSignedTransaction({ receiverId, actions, network }: { receiverId: string; actions: any; network: string }) {
@@ -147,11 +138,24 @@ const Nightly = async () => {
     },
 
     async getPublicKey() {
-      throw new Error(`Method not supported`);
+      const accounts = await getAccounts();
+      const account = accounts[0];
+      if (!account) throw new Error("Failed to find public key for account");
+      return nearAPI.utils.PublicKey.from(account.publicKey!);
     },
 
-    async signNep413Message() {
-      throw new Error(`Method not supported`);
+    async signNep413Message(message, accountId, recipient, nonce, callbackUrl) {
+      const result = await signer.signMessage({
+        message,
+        nonce: Buffer.from(nonce),
+        recipient,
+        callbackUrl,
+      });
+      return {
+        ...result,
+        publicKey: PublicKey.fromString(result.publicKey),
+        signature: Buffer.from(result.signature, "base64"),
+      };
     },
 
     async signDelegateAction(delegateAction: any) {
