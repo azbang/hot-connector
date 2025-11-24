@@ -16,7 +16,7 @@ export const ExampleNEAR: FC = () => {
 
   function setAccount(account: { accountId: string } | undefined) {
     if (account == null) return _setAccount(undefined);
-    _setAccount({ id: account.accountId, network: account.accountId.endsWith("testnet") ? "testnet" : "testnet" });
+    _setAccount({ id: account.accountId, network: account.accountId.endsWith("testnet") ? "testnet" : "mainnet" });
   }
 
   const [connector] = useState<NearConnector>(() => {
