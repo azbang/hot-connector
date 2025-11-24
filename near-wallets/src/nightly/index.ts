@@ -38,6 +38,11 @@ const Nightly = async () => {
   const getAccounts = async (): Promise<Array<{ accountId: string; publicKey: string }>> => {
     const { accountId, publicKey } = await window.selector.external("nightly.near", "account");
     if (!accountId) return [];
+
+    if (publicKey.ed25519Key) {
+      return [{ accountId, publicKey: `ed25519:${baseEncode(publicKey.ed25519Key.data)}` }];
+    }
+
     return [{ accountId, publicKey: `ed25519:${baseEncode(publicKey.data)}` }];
   };
 
@@ -113,15 +118,17 @@ const Nightly = async () => {
       await checkExist();
       const accounts = await getAccounts();
       if (!accounts.length) throw new Error("Wallet not signed in");
-      const signerId = accounts[0].accountId;
 
-      return await signAndSendTransactionsHandler(transactions, signer, networks[network]);
+      const signerId = accounts[0].accountId;
+      const list = transactions.map((t: any) => ({ ...t, signerId }));
+      return await signAndSendTransactionsHandler(list, signer, networks[network]);
     },
 
     async createSignedTransaction({ receiverId, actions, network }: { receiverId: string; actions: any; network: string }) {
       await checkExist();
       const accounts = await getAccounts();
       if (!accounts.length) throw new Error("Wallet not signed in");
+
       const signerId = accounts[0].accountId;
       const [signedTx] = await signTransactions([{ signerId, receiverId, actions }], signer, networks[network]);
       return signedTx;

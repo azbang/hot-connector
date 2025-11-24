@@ -9,9 +9,7 @@ import { createAction } from "../utils/action";
 
 export const createTransactions = async (transactions: Array<any>, signer: Signer, network: any): Promise<NearTransaction[]> => {
   const nearTransactions: NearTransaction[] = [];
-  const provider = new JsonRpcProvider({
-    url: network.nodeUrl,
-  });
+  const provider = new JsonRpcProvider({ url: network.nodeUrl });
 
   for (let i = 0; i < transactions.length; i++) {
     const publicKey = await signer.getPublicKey(transactions[i].signerId, network.networkId);

@@ -1,6 +1,6 @@
 import { FC, useMemo, useState } from "react";
 
-import { NearConnector, NearWalletBase } from "../../src";
+import { NearConnector, NearWalletBase } from "@hot-labs/near-connect";
 
 import { NetworkSelector } from "./form-component/NetworkSelector.tsx";
 import { WalletActions } from "./WalletActions.tsx";
