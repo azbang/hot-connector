@@ -38,9 +38,8 @@ jobs:
           cd near-wallets
           yarn install --frozen-lockfile
 
-      - name: Install near-connect deps
+      - name: Install deps
         run: |
-          cd near-connect
           yarn install --frozen-lockfile
 
       - name: Build example
