@@ -21,9 +21,10 @@ export const ExampleNEAR: FC = () => {
 
   const [connector] = useState<NearConnector>(() => {
     const connector = new NearConnector({
-      manifest: "/hot-connector/manifest.json",
+      // manifest: "/near-connect/manifest.json",
       providers: { mainnet: ["https://relmn.aurora.dev"] },
       network,
+      logger,
 
       walletConnect: {
         projectId: "1292473190ce7eb75c9de67e15aaad99",
@@ -34,7 +35,6 @@ export const ExampleNEAR: FC = () => {
           icons: ["/favicon.ico"],
         },
       },
-      logger,
     });
 
     connector.on("wallet:signIn", async (t) => {

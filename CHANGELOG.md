@@ -1,3 +1,7 @@
+# 0.6.11
+
+- Add `signIn` to setup limited access key (deprecated flow)
+
 # 0.6.10
 
 - Fix SSR issues
