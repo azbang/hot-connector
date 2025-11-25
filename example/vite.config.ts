@@ -6,5 +6,5 @@ import tailwindcss from "@tailwindcss/vite";
 export default defineConfig({
   server: { port: 1234 },
   plugins: [nodePolyfills(), react(), tailwindcss()],
-  base: "/hot-connector/",
+  base: "/near-connect/",
 });
