@@ -290,39 +290,33 @@ export class NearConnector {
     const wallet = this.wallets.find((wallet) => wallet.manifest.id === id);
     if (!wallet) throw new Error("No wallet selected");
 
-    const accounts = await wallet.getAccounts();
+    const proxiedWallet = new WalletProxy(wallet, this.pluginManager);
+
+    const accounts = await proxiedWallet.getAccounts();
     if (!accounts?.length) throw new Error("No accounts found");
 
     await this.disconnectIfBanned(wallet, accounts);
 
-    return { wallet, accounts };
+    return { wallet: proxiedWallet, accounts };
   }
 
   async wallet(id?: string | null): Promise<NearWalletBase> {
     await this.whenManifestLoaded.catch(() => {});
 
-    let wallet: NearWalletBase;
-
     if (!id) {
-      wallet = await this.getConnectedWallet()
-        .then(({ wallet }) => wallet)
-        .catch(async () => {
-          await this.storage.remove("selected-wallet");
-          throw new Error("No accounts found");
-        });
+      const { wallet } = await this.getConnectedWallet().catch(async () => {
+        await this.storage.remove("selected-wallet");
+        throw new Error("No accounts found");
+      });
+      return wallet;
     } else {
       const foundWallet = this.wallets.find((wallet) => wallet.manifest.id === id);
       if (!foundWallet) throw new Error("Wallet not found");
-      wallet = foundWallet;
-    }
 
-    // Wrap wallet with plugin system
-    return new WalletProxy(wallet, this.pluginManager);
+      return new WalletProxy(foundWallet, this.pluginManager);
+    }
   }
 
-  /**
-   * Register a plugin to intercept wallet method calls
-   */
   use(plugin: Plugin): void {
     this.pluginManager.use(plugin);
   }

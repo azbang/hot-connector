@@ -71,6 +71,16 @@ export interface Plugin {
     result: PluginResultFn<SignedMessage>,
     next: PluginNextFn<SignMessageParams, SignedMessage>
   ) => Promise<PluginResult<SignedMessage>>;
+
+  /**
+   * Intercept createKey method
+   */
+  createKey?: (
+    wallet: NearWalletBase,
+    params: { contractId: string; methodNames?: string[] },
+    result: PluginResultFn<void>,
+    next: PluginNextFn<{ contractId: string; methodNames?: string[] }, void>
+  ) => Promise<PluginResult<void>>;
 }
 
 /**

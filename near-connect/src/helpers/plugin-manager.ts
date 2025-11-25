@@ -12,11 +12,13 @@ export class PluginManager {
     methodName: keyof Plugin,
     wallet: NearWalletBase,
     args: TArgs,
-    walletMethod: (args: TArgs) => Promise<TReturn>
-  ): Promise<TReturn> {
-    const executeChain = async (index: number, currentArgs: TArgs): Promise<TReturn> => {
+    walletMethod: ((args: TArgs) => Promise<TReturn>) | null
+  ): Promise<TReturn | null> {
+    const executeChain = async (index: number, currentArgs: TArgs): Promise<TReturn | null> => {
       if (index >= this.plugins.length) {
-        return walletMethod(currentArgs);
+        console.log(index, "Executing wallet method", currentArgs);
+        
+        return walletMethod ? walletMethod(currentArgs) : null;
       }
 
       const plugin = this.plugins[index];
@@ -31,7 +33,7 @@ export class PluginManager {
         value,
       });
 
-      const next = async (newArgs: TArgs): Promise<TReturn> => {
+      const next = async (newArgs: TArgs): Promise<TReturn | null> => {
         return executeChain(index + 1, newArgs);
       };
 
