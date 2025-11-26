@@ -134,12 +134,6 @@ export interface NearWalletBase {
    */
   signAndSendTransactions(params: SignAndSendTransactionsParams): Promise<Array<FinalExecutionOutcome>>;
   signMessage(params: SignMessageParams): Promise<SignedMessage>;
-
-  /**
-   * Programmatically create a new access key for a contract with optional method names.
-   * This method is optional and may not be implemented by all wallets.
-   */
-  createKey?(params: { contractId: string; methodNames?: string[] }): Promise<void>;
 }
 
 export type WalletEvents = {

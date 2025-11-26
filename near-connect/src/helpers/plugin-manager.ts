@@ -9,7 +9,7 @@ export class PluginManager {
   }
 
   async executePluginChain<TArgs, TReturn>(
-    methodName: keyof Plugin,
+    methodName: string,
     wallet: NearWalletBase,
     args: TArgs,
     walletMethod: ((args: TArgs) => Promise<TReturn>) | null

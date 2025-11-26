@@ -3,7 +3,7 @@ import { NearWalletsPopup } from "./popups/NearWalletsPopup";
 import { LocalStorage, DataStorage } from "./helpers/storage";
 import IndexedDB from "./helpers/indexdb";
 import { PluginManager } from "./helpers/plugin-manager";
-import { WalletProxy } from "./helpers/wallet-proxy";
+import { createWalletProxy } from "./helpers/wallet-proxy";
 
 import { EventNearWalletInjected, WalletManifest, Network, WalletFeatures, Logger, NearWalletBase, Account } from "./types/wallet";
 import { ParentFrameWallet } from "./ParentFrameWallet";
@@ -290,7 +290,7 @@ export class NearConnector {
     const wallet = this.wallets.find((wallet) => wallet.manifest.id === id);
     if (!wallet) throw new Error("No wallet selected");
 
-    const proxiedWallet = new WalletProxy(wallet, this.pluginManager);
+    const proxiedWallet = createWalletProxy(wallet, this.pluginManager);
 
     const accounts = await proxiedWallet.getAccounts();
     if (!accounts?.length) throw new Error("No accounts found");
@@ -313,7 +313,7 @@ export class NearConnector {
       const foundWallet = this.wallets.find((wallet) => wallet.manifest.id === id);
       if (!foundWallet) throw new Error("Wallet not found");
 
-      return new WalletProxy(foundWallet, this.pluginManager);
+      return createWalletProxy(foundWallet, this.pluginManager);
     }
   }
 

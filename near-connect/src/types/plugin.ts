@@ -73,14 +73,15 @@ export interface Plugin {
   ) => Promise<PluginResult<SignedMessage>>;
 
   /**
-   * Intercept createKey method
+   * Generic method interceptor for any method not explicitly defined above
+   * This allows plugins to intercept custom wallet methods like createKey, etc.
    */
-  createKey?: (
+  [methodName: string]: ((
     wallet: NearWalletBase,
-    params: { contractId: string; methodNames?: string[] },
-    result: PluginResultFn<void>,
-    next: PluginNextFn<{ contractId: string; methodNames?: string[] }, void>
-  ) => Promise<PluginResult<void>>;
+    args: any,
+    result: PluginResultFn<any>,
+    next: PluginNextFn<any, any>
+  ) => Promise<PluginResult<any>>) | undefined;
 }
 
 /**
