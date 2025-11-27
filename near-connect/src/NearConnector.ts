@@ -2,7 +2,6 @@ import { EventEmitter } from "./helpers/events";
 import { NearWalletsPopup } from "./popups/NearWalletsPopup";
 import { LocalStorage, DataStorage } from "./helpers/storage";
 import IndexedDB from "./helpers/indexdb";
-import { PluginManager } from "./helpers/plugin-manager";
 
 import { EventNearWalletInjected, WalletManifest, Network, WalletFeatures, Logger, NearWalletBase, Account } from "./types/wallet";
 import { ParentFrameWallet } from "./ParentFrameWallet";
@@ -39,7 +38,6 @@ export class NearConnector {
   private plugins: WalletPlugin[] = [];
   readonly events: EventEmitter<EventMap>;
   readonly db: IndexedDB;
-  readonly pluginManager: PluginManager;
   logger?: Logger;
 
   wallets: NearWalletBase[] = [];
@@ -61,7 +59,6 @@ export class NearConnector {
     this.db = new IndexedDB("hot-connector", "wallets");
     this.storage = options?.storage ?? new LocalStorage();
     this.events = options?.events ?? new EventEmitter<EventMap>();
-    this.pluginManager = new PluginManager();
     this.logger = options?.logger;
 
     this.network = options?.network ?? "mainnet";
