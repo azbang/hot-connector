@@ -16,13 +16,7 @@ export type {
 } from "./types/wallet";
 
 export type {
-  Plugin,
-  PluginResult,
-  PluginResultFn,
-  PluginNextFn,
-  PluginContext,
+  WalletPlugin,
 } from "./types/plugin";
-
-export { createResult, createNext } from "./types/plugin";
 
 export * as tx from "./types/transactions";

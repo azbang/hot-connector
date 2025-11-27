@@ -3,7 +3,6 @@ import { NearWalletsPopup } from "./popups/NearWalletsPopup";
 import { LocalStorage, DataStorage } from "./helpers/storage";
 import IndexedDB from "./helpers/indexdb";
 import { PluginManager } from "./helpers/plugin-manager";
-import { createWalletProxy } from "./helpers/wallet-proxy";
 
 import { EventNearWalletInjected, WalletManifest, Network, WalletFeatures, Logger, NearWalletBase, Account } from "./types/wallet";
 import { ParentFrameWallet } from "./ParentFrameWallet";
@@ -11,7 +10,7 @@ import { InjectedWallet } from "./InjectedWallet";
 import { SandboxWallet } from "./SandboxedWallet";
 import { EventMap } from "./types/wallet-events";
 import { Action } from "./types/transactions";
-import type { Plugin } from "./types/plugin";
+import type { WalletPlugin } from "./types/plugin";
 
 interface NearConnectorOptions {
   isBannedNearAddress?: (address: string) => Promise<boolean>;
@@ -37,6 +36,7 @@ const defaultManifests = [
 
 export class NearConnector {
   private storage: DataStorage;
+  private plugins: WalletPlugin[] = [];
   readonly events: EventEmitter<EventMap>;
   readonly db: IndexedDB;
   readonly pluginManager: PluginManager;
@@ -203,7 +203,15 @@ export class NearConnector {
   async registerWallet(manifest: WalletManifest) {
     if (manifest.type !== "sandbox") throw new Error("Only sandbox wallets are supported");
     if (this.wallets.find((wallet) => wallet.manifest.id === manifest.id)) return;
-    this.wallets.push(new SandboxWallet(this, manifest));
+    let sandboxWallet = new SandboxWallet(this, manifest);
+
+    // inject plugins
+    let wallet: NearWalletBase = sandboxWallet;
+    for (const plugin of this.plugins) {
+      wallet = plugin(wallet);
+    }
+
+    this.wallets.push(wallet);
     this.events.emit("selector:walletsChanged", {});
   }
 
@@ -290,35 +298,33 @@ export class NearConnector {
     const wallet = this.wallets.find((wallet) => wallet.manifest.id === id);
     if (!wallet) throw new Error("No wallet selected");
 
-    const proxiedWallet = createWalletProxy(wallet, this.pluginManager);
-
-    const accounts = await proxiedWallet.getAccounts();
+    const accounts = await wallet.getAccounts();
     if (!accounts?.length) throw new Error("No accounts found");
 
     await this.disconnectIfBanned(wallet, accounts);
 
-    return { wallet: proxiedWallet, accounts };
+    return { wallet, accounts };
   }
 
   async wallet(id?: string | null): Promise<NearWalletBase> {
     await this.whenManifestLoaded.catch(() => {});
 
     if (!id) {
-      const { wallet } = await this.getConnectedWallet().catch(async () => {
-        await this.storage.remove("selected-wallet");
-        throw new Error("No accounts found");
-      });
-      return wallet;
-    } else {
-      const foundWallet = this.wallets.find((wallet) => wallet.manifest.id === id);
-      if (!foundWallet) throw new Error("Wallet not found");
-
-      return createWalletProxy(foundWallet, this.pluginManager);
+      return this.getConnectedWallet()
+        .then(({ wallet }) => wallet)
+        .catch(async () => {
+          await this.storage.remove("selected-wallet");
+          throw new Error("No accounts found");
+        });
     }
+
+    const wallet = this.wallets.find((wallet) => wallet.manifest.id === id);
+    if (!wallet) throw new Error("Wallet not found");
+    return wallet;
   }
 
-  use(plugin: Plugin): void {
-    this.pluginManager.use(plugin);
+  use(plugin: WalletPlugin): void {
+    this.plugins.push(plugin);
   }
 
   on<K extends keyof EventMap>(event: K, callback: (payload: EventMap[K]) => void): void {
