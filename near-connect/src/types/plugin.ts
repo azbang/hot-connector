@@ -1,3 +1,9 @@
 import { NearWalletBase } from "./wallet";
 
-export type WalletPlugin = (wallet: NearWalletBase) => NearWalletBase & Record<string, any>
+export type WalletPlugin = Partial<{
+  [K in keyof NearWalletBase]: NearWalletBase[K] extends (...args: infer Args) => infer Return
+    ? (...args: [...Args, () => Return]) => Return
+    : never;
+}> & {
+  [key: string]: (...args: any[]) => any;
+};

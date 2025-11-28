@@ -313,12 +313,25 @@ export class NearConnector {
   }
 
   use(plugin: WalletPlugin): void {
-    this.plugins.push(plugin);
-
-    // Apply plugin to all existing wallets
     this.wallets = this.wallets.map(wallet => {
-      const pluginMethods = plugin(wallet);
-      return Object.assign(Object.create(Object.getPrototypeOf(wallet)), wallet, pluginMethods);
+      const proxy = Object.create(wallet) as NearWalletBase;
+
+      for (const key of Object.keys(plugin)) {
+        const walletMethod = (wallet as any)[key];
+        
+        // Only intercept existing wallet methods, ignore others
+        if (typeof walletMethod === "function") {
+          const pluginMethod = (plugin as any)[key];
+          
+          (proxy as any)[key] = function(this: any, ...args: any[]) {
+            // Plugin method gets priority, and call original via next()
+            const next = () => walletMethod.apply(wallet, args);
+            return pluginMethod.call(this, ...args, next);
+          };
+        }
+      }
+
+      return proxy;
     });
   }
 
