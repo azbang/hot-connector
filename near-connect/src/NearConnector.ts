@@ -315,9 +315,6 @@ export class NearConnector {
   async use(plugin: WalletPlugin): Promise<void> {
     await this.whenManifestLoaded.catch(() => { });
 
-    console.log("We waited, not lets apply wallet plugin", plugin);
-    console.log(`On the ${this.wallets.length} wallets`);
-
     this.wallets = this.wallets.map(wallet => {
       return new Proxy(wallet, {
         get(target, prop, receiver) {
