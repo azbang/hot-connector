@@ -200,15 +200,7 @@ export class NearConnector {
   async registerWallet(manifest: WalletManifest) {
     if (manifest.type !== "sandbox") throw new Error("Only sandbox wallets are supported");
     if (this.wallets.find((wallet) => wallet.manifest.id === manifest.id)) return;
-    let sandboxWallet = new SandboxWallet(this, manifest);
-
-    // inject plugins
-    let wallet: NearWalletBase = sandboxWallet;
-    for (const plugin of this.plugins) {
-      wallet = plugin(wallet);
-    }
-
-    this.wallets.push(wallet);
+    this.wallets.push(new SandboxWallet(this, manifest));
     this.events.emit("selector:walletsChanged", {});
   }
 
@@ -322,6 +314,12 @@ export class NearConnector {
 
   use(plugin: WalletPlugin): void {
     this.plugins.push(plugin);
+
+    // Apply plugin to all existing wallets
+    this.wallets = this.wallets.map(wallet => {
+      const pluginMethods = plugin(wallet);
+      return Object.assign(Object.create(Object.getPrototypeOf(wallet)), wallet, pluginMethods);
+    });
   }
 
   on<K extends keyof EventMap>(event: K, callback: (payload: EventMap[K]) => void): void {
