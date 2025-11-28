@@ -97,7 +97,7 @@ export class NearConnector {
       window.dispatchEvent(new Event("near-selector-ready"));
       window.addEventListener("message", async (event) => {
         if (event.data.type === "near-wallet-injected") {
-          await this.whenManifestLoaded.catch(() => {});
+          await this.whenManifestLoaded.catch(() => { });
           this.wallets = this.wallets.filter((wallet) => wallet.manifest.id !== event.data.manifest.id);
           this.wallets.unshift(new ParentFrameWallet(this, event.data.manifest));
           this.events.emit("selector:walletsChanged", {});
@@ -192,7 +192,7 @@ export class NearConnector {
   }
 
   async switchNetwork(network: "mainnet" | "testnet") {
-    await this.disconnect().catch(() => {});
+    await this.disconnect().catch(() => { });
     this.network = network;
     await this.connect();
   }
@@ -234,7 +234,7 @@ export class NearConnector {
   }
 
   async selectWallet() {
-    await this.whenManifestLoaded.catch(() => {});
+    await this.whenManifestLoaded.catch(() => { });
     return new Promise<string>((resolve, reject) => {
       const popup = new NearWalletsPopup({
         wallets: this.availableWallets.map((wallet) => wallet.manifest),
@@ -249,7 +249,7 @@ export class NearConnector {
   }
 
   async connect(id?: string) {
-    await this.whenManifestLoaded.catch(() => {});
+    await this.whenManifestLoaded.catch(() => { });
     if (!id) id = await this.selectWallet();
 
     try {
@@ -282,7 +282,7 @@ export class NearConnector {
   }
 
   async getConnectedWallet() {
-    await this.whenManifestLoaded.catch(() => {});
+    await this.whenManifestLoaded.catch(() => { });
     const id = await this.storage.get("selected-wallet");
     const wallet = this.wallets.find((wallet) => wallet.manifest.id === id);
     if (!wallet) throw new Error("No wallet selected");
@@ -296,7 +296,7 @@ export class NearConnector {
   }
 
   async wallet(id?: string | null): Promise<NearWalletBase> {
-    await this.whenManifestLoaded.catch(() => {});
+    await this.whenManifestLoaded.catch(() => { });
 
     if (!id) {
       return this.getConnectedWallet()
@@ -312,26 +312,35 @@ export class NearConnector {
     return wallet;
   }
 
-  use(plugin: WalletPlugin): void {
+  async use(plugin: WalletPlugin): Promise<void> {
+    await this.whenManifestLoaded.catch(() => { });
+
+    console.log("We waited, not lets apply wallet plugin", plugin);
+    console.log(`On the ${this.wallets.length} wallets`);
+
     this.wallets = this.wallets.map(wallet => {
-      const proxy = Object.create(wallet) as NearWalletBase;
+      return new Proxy(wallet, {
+        get(target, prop, receiver) {
+          const originalValue = Reflect.get(target, prop, receiver);
 
-      for (const key of Object.keys(plugin)) {
-        const walletMethod = (wallet as any)[key];
-        
-        // Only intercept existing wallet methods, ignore others
-        if (typeof walletMethod === "function") {
-          const pluginMethod = (plugin as any)[key];
-          
-          (proxy as any)[key] = function(this: any, ...args: any[]) {
-            // Plugin method gets priority, and call original via next()
-            const next = () => walletMethod.apply(wallet, args);
-            return pluginMethod.call(this, ...args, next);
-          };
+          // If plugin has this method and it's a function on the wallet
+          if (prop in plugin && typeof originalValue === "function") {
+            const pluginMethod = (plugin as any)[prop];
+
+            // Act as middleware, can call next method in line via next()
+            return function (this: any, ...args: any[]) {
+              const next = () => originalValue.apply(target, args);
+              // Pass all args if any exist, otherwise undefined
+              // this ensures next is always the last param
+              return args.length > 0
+                ? pluginMethod.call(this, ...args, next)
+                : pluginMethod.call(this, undefined, next);
+            };
+          }
+
+          return originalValue;
         }
-      }
-
-      return proxy;
+      }) as NearWalletBase;
     });
   }
 
