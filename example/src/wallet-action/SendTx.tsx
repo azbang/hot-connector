@@ -12,9 +12,8 @@ export const SendTx = ({ wallet, network }: IPropsWalletAction) => {
 
   const sendTx = async () => {
     setLastResult(undefined);
-
     const result = await wallet.signAndSendTransaction({
-      actions: [{ type: "Transfer", params: { deposit: parseNearAmount(amount) ?? "0" } }],
+      actions: [{ type: "Transfer", params: { deposit: parseNearAmount(amount)?.toString() ?? "0" } }],
       receiverId,
     });
 

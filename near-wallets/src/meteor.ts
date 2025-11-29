@@ -1,8 +1,7 @@
-import type { Account } from "@near-wallet-selector/core";
 import { EMeteorWalletSignInType, MeteorWallet } from "@meteorwallet/sdk";
-import { SelectorStorageKeyStore } from "./keystore";
+import { SelectorStorageKeyStore } from "./utils/keystore";
 import * as nearAPI from "near-api-js";
-import { NearRpc } from "./rpc";
+import { NearRpc } from "./utils/rpc";
 
 const keyStore = new SelectorStorageKeyStore();
 const defaults = {
@@ -53,7 +52,7 @@ const createMeteorWallet = async () => {
     return _state;
   };
 
-  const getAccounts = async (network: string): Promise<Array<Account>> => {
+  const getAccounts = async (network: string): Promise<Array<{ accountId: string; publicKey: string }>> => {
     const _state = await getState(network);
     const accountId = _state.wallet.getAccountId();
     const account = _state.wallet.account();

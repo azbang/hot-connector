@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "esModuleInterop": true,
+    "moduleResolution": "node",
+    "alwaysStrict": true,
+    "allowJs": true,
+    "strict": true,
+    "outDir": "./build",
+    "declaration": true,
+    "sourceMap": true,
+    "allowSyntheticDefaultImports": true,
+    "target": "ESNext",
+    "skipLibCheck": true,
+    "module": "CommonJS",
+    "lib": ["ESNext", "dom"],
+    "jsx": "react-jsx",
+    "jsxImportSource": "preact",
+    "resolveJsonModule": true
+  },
+  "include": ["./src/**/*"]
+}

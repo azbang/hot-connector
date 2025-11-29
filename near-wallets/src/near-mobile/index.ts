@@ -4,7 +4,7 @@ import { Network, SessionState } from "@peersyst/near-mobile-signer/src/common/m
 import { NearMobileStrategy } from "@peersyst/near-mobile-signer/dist/src/wallet/NearMobileWallet.types";
 import config from "@peersyst/near-mobile-signer/dist/src/common/config/config";
 import QRCodeStyling from "qr-code-styling";
-import { KeyPair } from "near-api-js";
+import { KeyPair } from "@near-js/crypto";
 
 const isMobile = function () {
   let check = false;
@@ -180,10 +180,9 @@ export const initNearMobileWallet = async () => {
   }
 
   return {
-    async signIn(data: { network: Network; contractId: string }) {
+    async signIn(data: { network: Network; contractId?: string; methodNames?: Array<string> }) {
       window.selector.ui.showIframe();
-      const contractId = data.contractId !== "" ? data.contractId : undefined;
-      await wallet[data.network].signIn({ ...data, contractId: contractId });
+      await wallet[data.network].signIn({ contractId: data.contractId, methodNames: data.methodNames });
       return await getAccounts(data.network);
     },
 

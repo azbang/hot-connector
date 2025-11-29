@@ -9,16 +9,14 @@
     "deploy": "surge ./dist"
   },
   "dependencies": {
-    "@creit.tech/stellar-wallets-kit": "^1.7.7",
-    "@hot-labs/near-connect": "^0.6.9",
-    "@hot-labs/wibe3": "^0.4.8",
+    "@hot-labs/near-connect": "^0.6.10",
+    "@near-js/utils": "^2.2.4",
     "@walletconnect/sign-client": "^2.22.4",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "usehooks-ts": "^3.1.1"
   },
   "devDependencies": {
-    "@near-js/utils": "^2.2.4",
     "@tailwindcss/vite": "^4.1.11",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
@@ -29,14 +27,12 @@
     "eslint": "^8.57.0",
     "eslint-plugin-react-hooks": "^4.6.2",
     "eslint-plugin-react-refresh": "^0.4.7",
-    "ethers": "^6.15.0",
     "sass-embedded": "^1.89.0",
     "surge": "^0.24.5",
     "tailwindcss": "^4.1.11",
     "typescript": "^5.2.2",
     "viem": "^2.33.2",
     "vite": "^5.3.4",
-    "vite-plugin-node-polyfills": "^0.24.0",
-    "wagmi": "^2.16.1"
+    "vite-plugin-node-polyfills": "^0.24.0"
   }
 }

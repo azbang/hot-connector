@@ -29,7 +29,7 @@ jobs:
         id: pkg
         shell: bash
         run: |
-          VERSION=$(node -p "require('./near-connect/package.json').version")
+          VERSION=$(node -p "require('./package.json').version")
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Prepare release notes from CHANGELOG.md
@@ -37,7 +37,7 @@ jobs:
         shell: bash
         run: |
           VERSION="${{ steps.pkg.outputs.version }}"
-          CHANGELOG="near-connect/CHANGELOG.md"
+          CHANGELOG="CHANGELOG.md"
           OUT="RELEASE_CHANGELOG.md"
           awk -v ver="$VERSION" '
             $0 ~ "^# " ver "$" {print; flag=1; next}
@@ -58,7 +58,7 @@ jobs:
         shell: bash
         run: |
           ZIP_NAME="near-connect-${{ steps.pkg.outputs.version }}.zip"
-          git archive -o "$ZIP_NAME" HEAD near-connect
+          git archive -o "$ZIP_NAME" HEAD .
           echo "zip=$ZIP_NAME" >> $GITHUB_OUTPUT
 
       - name: Create GitHub Release
@@ -69,6 +69,6 @@ jobs:
           body: ${{ steps.changelog.outputs.notes }}
           files: |
             ${{ steps.zip.outputs.zip }}
-            near-connect/CHANGELOG.md
+            CHANGELOG.md
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

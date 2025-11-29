@@ -23,9 +23,6 @@
   "devDependencies": {
     "@here-wallet/core": "^3.4.0",
     "@meteorwallet/sdk": "1.0.9",
-    "@near-wallet-selector/core": "^10.0.0",
-    "@near-wallet-selector/ledger": "^8.10.1",
-    "@near-wallet-selector/modal-ui-js": "^8.9.12",
     "@noble/hashes": "^1.4.0",
     "@peersyst/near-mobile-signer": "^1.1.4",
     "@types/node": "^24.9.1",

@@ -1,17 +1,22 @@
-import type { InternalAction, FinalExecutionOutcome, Network, SignedMessage, SignMessageParams } from "@near-wallet-selector/core";
 import type { JsonRpcProvider } from "near-api-js/lib/providers/index.js";
 import type { PublicKey } from "near-api-js/lib/utils/index.js";
+import { SCHEMA } from "near-api-js/lib/transaction.js";
+import * as borsh from "borsh";
 
 import { Account, Connection, InMemorySigner, transactions } from "near-api-js";
 import { KeyPair, serialize } from "near-api-js/lib/utils/index.js";
-import { createAction } from "@near-wallet-selector/wallet-utils";
-import { SCHEMA } from "near-api-js/lib/transaction.js";
-import * as borsh from "borsh";
-import { NearRpc } from "./rpc";
+import { createAction } from "./utils/action";
+import { NearRpc } from "./utils/rpc";
 
 const DEFAULT_POPUP_WIDTH = 480;
 const DEFAULT_POPUP_HEIGHT = 640;
 const POLL_INTERVAL = 300;
+
+type InternalAction = any;
+type SignMessageParams = any;
+type FinalExecutionOutcome = any;
+type Network = any;
+type SignedMessage = any;
 
 interface WalletMessage {
   status: "success" | "failure" | "pending";
@@ -77,7 +82,7 @@ export class MyNearWalletConnector {
   }
 
   getPublicKey(): PublicKey | undefined {
-    if (this.functionCallKey) return KeyPair.fromString(this.functionCallKey.privateKey).getPublicKey();
+    if (this.functionCallKey) return KeyPair.fromString(this.functionCallKey.privateKey as any).getPublicKey();
     return undefined;
   }
 
@@ -219,7 +224,7 @@ export class MyNearWalletConnector {
 
   async signUsingKeyPair({ receiverId, actions }: { receiverId: string; actions: Array<InternalAction> }): Promise<FinalExecutionOutcome> {
     // instantiate an account (NEAR API is a nightmare)
-    const keyPair = KeyPair.fromString(this.functionCallKey!.privateKey);
+    const keyPair = KeyPair.fromString(this.functionCallKey!.privateKey as any);
     const signer = await InMemorySigner.fromKeyPair(this.network.networkId, this.signedAccountId, keyPair);
     const connection = new Connection(this.network.networkId, this.provider, signer, "");
     const account = new Account(connection, this.signedAccountId);

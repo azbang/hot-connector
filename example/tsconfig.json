@@ -24,14 +24,6 @@
     "noFallthroughCasesInSwitch": true
   },
 
-  "include": [
-    "src",
-    "../near-connect",
-    "../wibe3/src",
-    "vite-env.d.ts",
-    "vite.config.ts",
-    "tsconfig.json",
-    "tsconfig.node.json"
-  ],
+  "include": ["src", "../src", "vite-env.d.ts", "vite.config.ts", "tsconfig.json", "tsconfig.node.json"],
   "exclude": ["node_modules", "dist", "public"]
 }
