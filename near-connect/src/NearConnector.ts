@@ -9,7 +9,7 @@ import { InjectedWallet } from "./InjectedWallet";
 import { SandboxWallet } from "./SandboxedWallet";
 import { EventMap } from "./types/wallet-events";
 import { Action } from "./types/transactions";
-import type { WalletPlugin } from "./types/plugin";
+import { WalletPlugin } from "./types/plugin";
 
 interface NearConnectorOptions {
   isBannedNearAddress?: (address: string) => Promise<boolean>;
@@ -26,6 +26,15 @@ interface NearConnectorOptions {
   events?: EventEmitter<EventMap>;
   storage?: DataStorage;
   logger?: Logger;
+
+  /**
+   * @deprecated
+   * Some wallets allow adding a limited-access key to a contract as soon as the user connects their wallet.
+   * This enables the app to sign non-payable transactions without requiring wallet approval each time.
+   * However, this approach requires the user to submit an on-chain transaction during the initial connection, which may negatively affect the user experience.
+   * A better practice is to add the limited-access key after the user has already begun actively interacting with your application.
+   */
+  signIn?: { contractId?: string; methodNames?: Array<string> };
 }
 
 const defaultManifests = [
@@ -35,7 +44,6 @@ const defaultManifests = [
 
 export class NearConnector {
   private storage: DataStorage;
-  private plugins: WalletPlugin[] = [];
   readonly events: EventEmitter<EventMap>;
   readonly db: IndexedDB;
   logger?: Logger;
@@ -47,6 +55,7 @@ export class NearConnector {
 
   providers: { mainnet?: string[]; testnet?: string[] } = { mainnet: [], testnet: [] };
   walletConnect?: { projectId: string; metadata: any };
+  signInData?: { contractId?: string; methodNames?: Array<string> };
 
   excludedWallets: string[] = [];
   autoConnect?: boolean;
@@ -70,6 +79,7 @@ export class NearConnector {
 
     this.excludedWallets = options?.excludedWallets ?? [];
     this.features = options?.features ?? {};
+    this.signInData = options?.signIn;
 
     this.whenManifestLoaded = new Promise(async (resolve) => {
       if (options?.manifest == null || typeof options.manifest === "string") {
@@ -97,7 +107,7 @@ export class NearConnector {
       window.dispatchEvent(new Event("near-selector-ready"));
       window.addEventListener("message", async (event) => {
         if (event.data.type === "near-wallet-injected") {
-          await this.whenManifestLoaded.catch(() => { });
+          await this.whenManifestLoaded.catch(() => {});
           this.wallets = this.wallets.filter((wallet) => wallet.manifest.id !== event.data.manifest.id);
           this.wallets.unshift(new ParentFrameWallet(this, event.data.manifest));
           this.events.emit("selector:walletsChanged", {});
@@ -191,8 +201,10 @@ export class NearConnector {
     }
   }
 
-  async switchNetwork(network: "mainnet" | "testnet") {
-    await this.disconnect().catch(() => { });
+  async switchNetwork(network: "mainnet" | "testnet", signInData?: { contractId?: string; methodNames?: Array<string> }) {
+    if (this.network === network) return;
+    await this.disconnect().catch(() => {});
+    if (signInData) this.signInData = signInData;
     this.network = network;
     await this.connect();
   }
@@ -234,7 +246,7 @@ export class NearConnector {
   }
 
   async selectWallet() {
-    await this.whenManifestLoaded.catch(() => { });
+    await this.whenManifestLoaded.catch(() => {});
     return new Promise<string>((resolve, reject) => {
       const popup = new NearWalletsPopup({
         wallets: this.availableWallets.map((wallet) => wallet.manifest),
@@ -249,7 +261,7 @@ export class NearConnector {
   }
 
   async connect(id?: string) {
-    await this.whenManifestLoaded.catch(() => { });
+    await this.whenManifestLoaded.catch(() => {});
     if (!id) id = await this.selectWallet();
 
     try {
@@ -259,7 +271,12 @@ export class NearConnector {
       await this.storage.set("selected-wallet", id);
       this.logger?.log(`Set preferred wallet, try to signIn`, id);
 
-      const accounts = await wallet.signIn();
+      const accounts = await wallet.signIn({
+        contractId: this.signInData?.contractId,
+        methodNames: this.signInData?.methodNames,
+        network: this.network,
+      });
+
       if (!accounts?.length) throw new Error("Failed to sign in");
 
       await this.disconnectIfBanned(wallet, accounts);
@@ -282,7 +299,7 @@ export class NearConnector {
   }
 
   async getConnectedWallet() {
-    await this.whenManifestLoaded.catch(() => { });
+    await this.whenManifestLoaded.catch(() => {});
     const id = await this.storage.get("selected-wallet");
     const wallet = this.wallets.find((wallet) => wallet.manifest.id === id);
     if (!wallet) throw new Error("No wallet selected");
@@ -296,7 +313,7 @@ export class NearConnector {
   }
 
   async wallet(id?: string | null): Promise<NearWalletBase> {
-    await this.whenManifestLoaded.catch(() => { });
+    await this.whenManifestLoaded.catch(() => {});
 
     if (!id) {
       return this.getConnectedWallet()
@@ -312,7 +329,7 @@ export class NearConnector {
     return wallet;
   }
 
-  async use(plugin: WalletPlugin): Promise<void> {
+    async use(plugin: WalletPlugin): Promise<void> {
     await this.whenManifestLoaded.catch(() => { });
 
     this.wallets = this.wallets.map(wallet => {

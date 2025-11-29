@@ -31,14 +31,13 @@ export class ParentFrameWallet {
     });
   }
 
-  async signIn(data?: { network?: Network; contractId?: string; methodNames?: string[] }): Promise<Array<Account>> {
-    const network = data?.network || this.connector.network;
-    
+  async signIn(data?: { network?: Network; contractId?: string; methodNames?: Array<string> }): Promise<Array<Account>> {
     const result = await this.callParentFrame("near:signIn", {
-      network,
+      network: data?.network || this.connector.network,
       contractId: data?.contractId,
-      methodNames: data?.methodNames
+      methodNames: data?.methodNames,
     });
+
     if (Array.isArray(result)) return result;
     return [result as Account];
   }
